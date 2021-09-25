@@ -2,9 +2,9 @@
 
 ## Team members
 
-*
-*
-*
+* Zack Moss
+* Steve Kim
+* Aishwarya M
 
 
 ## Description of the data 
