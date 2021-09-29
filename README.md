@@ -18,8 +18,6 @@ As housing prices continue to rise dramatically, can we create a model that will
 
 ## Why this question/dataset
 
-a few sentences describing why this question/dataset is interesting to you
-
 As we near the end of our undergradute lives, and step into the adult world, it will not be long before we begin to look to buying houses for oursevles. However, with the current housing market and the way it is behaving, one cannot shake the forboding feeling about their future. We wanted to look at the dataset to see if we could look at past data and get a better understanding of what the market might do. In turn, this would give us a better expectation of what the market might look like in the near future. Futhermore, we could also estimate the cost of our 'dream home' by placing it on our current data to get a monetary output for our expectation.
 
 ## Reading list 
