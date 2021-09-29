@@ -4,7 +4,7 @@
 
 * Zack Moss
 * Steve Kim
-* Aishwarya M
+* Aishwarya More
 
 
 ## Description of the data 
@@ -22,7 +22,10 @@ As we near the end of our undergradute lives, and step into the adult world, it 
 
 ## Reading list 
 
-(papers you may need to read)
+Zietz, Joachim, and Anca Traian. “When was the US housing downturn predictable? A comparison of univariate forecasting methods.” The Quarterly Review of Economics and Finance 54.2 (2014): 271-281.
+
+Tan, Chang Wei, et al. “Time series extrinsic regression.” Data Mining and Knowledge Discovery 35.3 (2021): 1032-1060.
+
 ## Team contract. 
 
 For each area, write 1-2 sentences and including any rules to which your team collectively agrees (e.g. "We agree to make 1 commit per week." or "We agree to meet in the library every other Friday.")
