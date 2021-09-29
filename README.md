@@ -14,8 +14,6 @@
 
 ## Precise description of the question(s)
 
-you are trying to answer 
-
 As housing prices continue to rise dramatically, can we create a model that will allow us to predict future prices from decades of past data? From the data, we first infer what predictors may affect housing price the most. After selecting based on appropriate criterion, we form a model to predict the range of the value of homes in the future. 
 
 ## Why this question/dataset
