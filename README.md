@@ -1,4 +1,4 @@
-# Enter your title here
+# Estimating Housing Prices in the US 
 
 ## Team members
 
@@ -8,9 +8,9 @@
 
 
 ## Description of the data 
+Our data is organized by state, so we have 50 observations. We have a predictor of the average house price per stata for every month from January 2000 to August 2021 so 248 predictor variables. Note this data may be transformed in order to have it better displayed for observation (ex splitting the observations into 12 month "chunks" to increase the number of observations.) 
 
-(include the number of observations, number of predictors, what the different predictors are, etc.)
-
+Data is obtained from: https://www.zillow.com/research/data/
 
 ## Precise description of the question(s)
 
