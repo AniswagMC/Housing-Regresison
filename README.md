@@ -5,6 +5,7 @@
 * Zack Moss
 * Steve Kim
 * Aishwarya More
+* Anirudh Duggal
 
 
 ## Description of the data 
