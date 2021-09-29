@@ -28,7 +28,7 @@ a few sentences describing why this question/dataset is interesting to you
 For each area, write 1-2 sentences and including any rules to which your team collectively agrees (e.g. "We agree to make 1 commit per week." or "We agree to meet in the library every other Friday.")
 
 **Participation**  
-We agree to contribute equally and hold each other accountable by theatening to burn them on the stake if someone fails to contribute. :P
+We agree to contribute equally and hold each other accountable by theatening to burn them on the stake if someone fails to contribute. 😜
 
 **Communication**  
 We agree to communicate with everyone in the team using Discord as our medium. 
