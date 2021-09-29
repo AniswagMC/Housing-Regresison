@@ -28,16 +28,16 @@ a few sentences describing why this question/dataset is interesting to you
 For each area, write 1-2 sentences and including any rules to which your team collectively agrees (e.g. "We agree to make 1 commit per week." or "We agree to meet in the library every other Friday.")
 
 **Participation**  
-We agree to contribute equally and hold each other accountable by theatening to burn them on the stake if someone fails to contribute. 😜
+We agree to participate equally as part of the team. This means taking an active role in team discussions, contributing meaninfully to the team code base, via regular commits, and writing a portion of the final report. 
 
 **Communication**  
-We agree to communicate with everyone in the team using Discord as our medium. 
+We agree to use Discord as our prefered means of communication. We agree to check discord on a minimum of a daily basis, in order to stay current on team discussions.  We will also provide our phone numbers to our team members to ensure that we can be reached outside of discord. 
 
 **Meetings**  
 We agree to meet once a week on Monday from 3 - 4 pm. The meetings will be held in a hybrid format over Discord.
 
 **Conduct**  
-We agree to ...
+We agree to treat our teammates with respect. Should any team disagreements arise we will settle that by a simple vote, should that end up tied we will determine the outcome using chance. 
 
 ***
 Do not make any changes from here on. Only the TAs will edit the following.
