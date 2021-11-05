@@ -1,30 +1,34 @@
-# Enter your title here
+# Estimating Housing Prices in the US 
 
 ## Team members
 
 * Zack Moss
 * Steve Kim
-* Aishwarya M
+* Aishwarya More
+* Anirudh Duggal
 
 
 ## Description of the data 
+Our data is organized by state, so we have 50 observations. We have a predictor of the average house price per stata for every month from January 2000 to August 2021 so 248 predictor variables. Note this data may be transformed in order to have it better displayed for observation (ex splitting the observations into 12 month "chunks" to increase the number of observations.) 
 
-(include the number of observations, number of predictors, what the different predictors are, etc.)
-
+Data is obtained from: https://www.zillow.com/research/data/
 
 ## Precise description of the question(s)
 
-you are trying to answer 
+As housing prices continue to rise dramatically, can we create a model that will allow us to predict future prices from decades of past data? From the data, we first infer what predictors may affect housing price the most. After selecting based on appropriate criterion, we form a model to predict the range of the value of homes in the future. 
 
 As housing prices continue to rise dramatically, can we create a model that will allow us to predict future prices from decades of past data? From the data, we first infer what predictors may affect housing price the most. After selecting based on appropriate criterion, we form a model to predict the range of the value of homes in the future. 
 
 ## Why this question/dataset
 
-a few sentences describing why this question/dataset is interesting to you
+As we near the end of our undergradute lives, and step into the adult world, it will not be long before we begin to look to buying houses for oursevles. However, with the current housing market and the way it is behaving, one cannot shake the forboding feeling about their future. We wanted to look at the dataset to see if we could look at past data and get a better understanding of what the market might do. In turn, this would give us a better expectation of what the market might look like in the near future. Futhermore, we could also estimate the cost of our 'dream home' by placing it on our current data to get a monetary output for our expectation.
 
 ## Reading list 
 
-(papers you may need to read)
+Zietz, Joachim, and Anca Traian. “When was the US housing downturn predictable? A comparison of univariate forecasting methods.” The Quarterly Review of Economics and Finance 54.2 (2014): 271-281.
+
+Tan, Chang Wei, et al. “Time series extrinsic regression.” Data Mining and Knowledge Discovery 35.3 (2021): 1032-1060.
+
 ## Team contract. 
 
 For each area, write 1-2 sentences and including any rules to which your team collectively agrees (e.g. "We agree to make 1 commit per week." or "We agree to meet in the library every other Friday.")
