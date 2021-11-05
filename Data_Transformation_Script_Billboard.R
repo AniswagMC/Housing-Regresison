@@ -1,15 +1,36 @@
 library(tidytuesdayR)
 library(dplyr)
+library(tidyr)
 rawdata <- tidytuesdayR::tt_load('2021-09-14')
 
 audio <- rawdata$audio_features
 billboard <- rawdata$billboard
-billboard <- select(billboard, -c("song", "performer"))
 
-joined <- merge(billboard, audio, by="song_id")
+unique_songs <- unique(billboard$song_id)
+empty_matrix <- matrix(NA, nrow = length(unique_songs), ncol = ncol(billboard))
+billboard_singles <- as.data.frame(empty_matrix)
+colnames(billboard_singles) <- names(billboard)
+for(i in 1:length(unique_songs)){
+  versions <- filter(billboard, song_id == unique_songs[i])
+  min_peak_idx <- which.min(versions$peak_position)
+  billboard_singles[i,] <- versions[min_peak_idx,]
+}
+
+
+billboard_filtered <- select(billboard_singles, -c("song", "performer"))
+joined <- merge(billboard_filtered, audio, by="song_id")
+joined <- joined %>% select(-c("song_id", "url", "instance", "week_id", 
+                                "spotify_track_id", "spotify_track_preview_url", 
+                                "week_position", "previous_week_position"))
+
+joined <- joined %>% drop_na()
+write.csv(joined, "joined_billboard_audiofeature.csv")
+set.seed(406)
 n <- nrow(joined)
-n_half <- floor(n/2)
-first_half <- joined[1:n_half,]
-second_half <- joined[(n_half + 1):n,]
-write.csv(first_half, "joined_billboard_audiofeatures_half_1.csv")
-write.csv(second_half, "joined_billboard_audiofeatures_half_2.csv")
+training_idxs <- sample.int(n, floor(n * .80), FALSE)
+training_set <- joined[training_idxs,]
+test_set <- joined[-training_idxs,]
+write.csv(training_set, "training.csv")
+write.csv(test_set, "test.csv")
+
+
