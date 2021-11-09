@@ -17,6 +17,8 @@ Data is obtained from: https://www.zillow.com/research/data/
 
 As housing prices continue to rise dramatically, can we create a model that will allow us to predict future prices from decades of past data? From the data, we first infer what predictors may affect housing price the most. After selecting based on appropriate criterion, we form a model to predict the range of the value of homes in the future. 
 
+As housing prices continue to rise dramatically, can we create a model that will allow us to predict future prices from decades of past data? From the data, we first infer what predictors may affect housing price the most. After selecting based on appropriate criterion, we form a model to predict the range of the value of homes in the future. 
+
 ## Why this question/dataset
 
 As we near the end of our undergradute lives, and step into the adult world, it will not be long before we begin to look to buying houses for oursevles. However, with the current housing market and the way it is behaving, one cannot shake the forboding feeling about their future. We wanted to look at the dataset to see if we could look at past data and get a better understanding of what the market might do. In turn, this would give us a better expectation of what the market might look like in the near future. Futhermore, we could also estimate the cost of our 'dream home' by placing it on our current data to get a monetary output for our expectation.
