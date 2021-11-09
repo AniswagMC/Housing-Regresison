@@ -33,7 +33,7 @@ We as a group agreed to working with this dataset and on this question because w
 
 ## Exploratory Data Analysis
 
-Originally, we had planned to use the peak position on the billboard as a response variable, and model that using features (covariates) of the actual song as described in the data. However,  this response variable is not an optimal one to use, and through plots, logical reasoning, and exploratory data analysis we will show why and how we arose to to this conclusion and led to our final decision of response variable.
+Originally, we had planned to use the peak position on the billboard as a response variable, and model that using features (covariates) of the actual song as described in the data. However,  this response variable is not an optimal one to use, and through plots, logical reasoning, and exploratory data analysis we will show why and how we arose to this conclusion and led to our final decision of response variable.
 
 \vspace{18pt}
 
@@ -64,7 +64,7 @@ Even a quick glance at these plots show that these audio features have little to
 
 \vspace{18pt}
 
-Upon closer inspection of the chart however, we realized that spotify track popularity did indeed have many correlations with audio features, and is still a proper response variable when it comes to questions like if people wanted to get big on spotify, what kind of songs they should create. Hence this is why we decided to drop peak_position as our response for spotify track popularity.
+Upon closer inspection of the chart however, we realized that spotify track popularity did indeed have many correlations with audio features, and is still a proper response variable when it comes to questions like if people wanted to get big on spotify, what kind of songs they should create. Hence this is why we decided to drop peak_position as the dependent variable.
 
 \clearpage
 
