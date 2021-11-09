@@ -11,7 +11,7 @@ library(knitr)
 opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 
 library(tidyverse)
-library(ggcorrplot)
+library(corrplot)
 ```
 
 
@@ -20,7 +20,6 @@ library(ggcorrplot)
 
 ## Exploratory Data Analysis
 
-### Steve's Section
 Originally, we had planned to use the peak position on the billboard as a response variable, and model that using features (covariates) of the actual song as described in the data. However,  this response variable is not an optimal one to use, and through plots, logical reasoning, and exploratory data analysis we will show why and how we arose to to this conclusion and led to our final decision of response variable.
 
 \vspace{18pt}
@@ -36,12 +35,18 @@ bd_clean <- select(bd, -X, -performer, -song, -spotify_genre, -spotify_track_alb
 Next we make a correlation plot to have a broad overview of what variables may be connected to our response as well as with each other:
 ```{r}
 library(ggcorrplot)
+options(repr.plot.width=15, repr.plot.height=15)
 cor_matrix <- round(cor(bd_clean), 1)
-ggcorrplot(cor_matrix, lab = TRUE)
+corrplot(cor_matrix,
+   method = "color", 
+   addCoef.col="grey", 
+   order = "AOE", 
+   number.cex=0.4)
 ```
 This is where we became very skeptical about our selected response variable: peak_position. The chart shows that a song's peak position on the billboards have little to no correlation to audio features. Even with actual audio features that our response variable had little correlation with, take "speechiness" for example, has a plot that looks like:
 ```{r}
-plot(x = bd_clean$speechiness, y = bd_clean$peak_position)
+plot(x = bd_clean$speechiness, y = bd_clean$peak_position,
+     xlab = "Spoken words on a track", ylab = "Billboard peak position")
 ```
 Even a quick glance at these plots show that these audio features have little to no inherent effect on where the song ends up on the chart. Sure we had some correlated features like the weeks on the billboard and spotify song popularity, but those variables and their relation to peak_position is quite obvious and doesnt quite cover our goal of wanting to predict a songs position through mostly its AUDIO features.
 
