@@ -18,7 +18,18 @@ opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 
 
 ## Introduction
-[space for text]
+The best example to illustrate the commercialization of the arts is today’s music industry. Being a multi-billion dollar industry, artists and labels have to work on finding a balance between making music that appeals to their fans and fulfills their artistic expression, while also makes money. In the digital landscape, the number of plays or streams a song gets is indicative of it’s financial success. In other words, the more popular a song becomes, the more money it brings in. If this really is the case, then being able to idenfity how popular a song can become before it is even released would be of great interest to labels and record companies. So, this naturally raises the question that we will be focusing on in this report: 
+
+**Given data on the audio-based attributes of a song, can we predict how popular it will become?**
+
+### Dataset
+To answer this question, our group will be working with data on different audio-based features of a song to predict it's popularity when released on a music streaming platform. The dataset we will be using is from the Tidy Tuesday dataset collection [https://github.com/rfordatascience/tidytuesday/blob/master/data/2021/2021-09-14/readme.md]. We have cleaned and combined the `audio_features.csv` and `billboard.csv` datasets provided to obtain the dataset we will use for the rest of our analysis. The raw data files have 32 variables, of which we will be using 21 relevant variables. The data represents different features of a song such as its key, tempo, loudness, danceability, etc. as well as metrics reflecting its popularity on billboard and spotify charts respectively. 
+
+### Objective
+Our goal with this project/report is to create a regression model to predict how "popular" a song may be based on it's audio-based features. This means we will be looking at each song independent of cultural trends, the associated artist's popularity, and other external influences. We will be looking into ideas such as what features popular songs have in common, if any specific feature is highly linked to a song performing well or being well recieved, and whether we can identify any subgroups with their own unique trends.
+
+### Motivation 
+We as a group agreed to working with this dataset and on this question because we are all avid music lovers. With varied interest and tastes amongst all of us, we thought it would be interesting to see how an emperical analysis of what is or isn't "popular music" would compare to our own personal preferences, and how much each of us may agree or disagree with the findings.
 
 ## Exploratory Data Analysis
 
@@ -28,8 +39,7 @@ Originally, we had planned to use the peak position on the billboard as a respon
 
 We first cleaned our dataset by removing obviously non-useful variables like names. (However, while we recognize that different genres may have differing levels of popularity, for simplicity we will leave out this variable as the "genre" of certain songs may be ambiguous and there are too many categories to keep track of.)
 ```{r}
-bd <- read.csv("joined_billboard_audiofeature.csv")
-bd_clean <- select(bd, -X, -performer, -song, -spotify_genre, -spotify_track_album)
+bd_clean <- select(songs, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
 ```
 
 \vspace{18pt}
