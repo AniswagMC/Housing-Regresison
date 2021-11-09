@@ -46,7 +46,6 @@ bd_clean <- select(songs, -X, -performer, -song, -spotify_genre, -spotify_track_
 
 Next we make a correlation plot to have a broad overview of what variables may be connected to our response as well as with each other:
 ```{r}
-library(ggcorrplot)
 options(repr.plot.width=15, repr.plot.height=15)
 cor_matrix <- round(cor(bd_clean), 1)
 corrplot(cor_matrix,
