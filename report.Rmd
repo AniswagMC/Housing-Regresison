@@ -122,6 +122,47 @@ to our response variable, they are all quite weakly correlated with them. While 
 ### Anirudh's Section
 
 ```{r}
-# Insert code here
+library("ggplot2")                    
+library("GGally")
+
+popularity_boxplot = songs %>% 
+                      ggplot(aes(x = "", y = spotify_track_popularity)) +
+                      geom_boxplot() + 
+                      ggtitle("Spotify Track Popularity Boxplot") + 
+                      labs(x = "", y = "Spotify Track Popularity") +
+                      theme(plot.title = element_text(hjust = 0.5))
+popularity_boxplot
+summary(songs$spotify_track_popularity)
 ```
-[space for text]
+While it was expected that spotify popoularities cover the entire range from 0 to 100, the boxplot, alongside the five number summary helps understand that the median popularity is 43. This suggests that a lot of songs do not rank highly in popularity. Hence, the higher popularity ranks are coveted. We will further explore how many songs are rated in four categories, as described below.
+
+```{r}
+pop25 = songs %>% filter(spotify_track_popularity <= 25)
+pop50 = songs %>% filter(spotify_track_popularity > 25 & spotify_track_popularity <= 50)
+pop75 = songs %>% filter(spotify_track_popularity > 50 & spotify_track_popularity <= 75)
+pop100 = songs %>% filter(spotify_track_popularity > 75)
+
+
+pop25_df = cbind("Pop25", nrow(pop25)) 
+pop50_df = cbind("Pop50", nrow(pop50)) 
+pop75_df = cbind("Pop75", nrow(pop75)) 
+pop100_df = cbind("Pop100", nrow(pop100)) 
+
+pop_all_df = as.data.frame(rbind(pop25_df, pop50_df, pop75_df, pop100_df))
+colnames(pop_all_df) = c("Pops", "n")
+ordered_pops = c("Pop25", "Pop50", "Pop75", "Pop100")
+
+pop_n_plot = pop_all_df %>%
+              ggplot(aes(x = Pops, y = n)) +
+              geom_col() +
+              scale_x_discrete(limits = ordered_pops) +
+              labs(x = "Popularity thresholds", y = "Counts") +
+              ggtitle("Counts For Each Popularity Group") +
+              theme(plot.title = element_text(hjust = 0.5)) +
+              geom_text(aes(label = n), vjust = -0.5, size = 3,
+              position = position_dodge(0.9))
+
+pop_n_plot
+```
+
+To better understand the spread of the data, four groups have been constructed, `Pop25`, which contains data for all values of `spotify_track_popularity < 25`; `Pop50` for $25 \leq$ `spotify_track_popularity` $< 50$; `Pop75` for $50 \leq$ `spotify_track_popularity` $< 75$; and finally, `Pop100` for `spotify_track_popularity` $> 75$. It is evident that a large portion of the songs get ranked between $25 \leq$ `spotify_track_popularity` $< 75$, while only 1262 out of the 24169 entries are ranked equal to or above 75.
