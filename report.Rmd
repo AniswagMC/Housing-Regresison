@@ -66,8 +66,6 @@ Even a quick glance at these plots show that these audio features have little to
 
 Upon closer inspection of the chart however, we realized that spotify track popularity did indeed have many correlations with audio features, and is still a proper response variable when it comes to questions like if people wanted to get big on spotify, what kind of songs they should create. Hence this is why we decided to drop peak_position as our response for spotify track popularity.
 
-\clearpage
-
 
 
 ### Zack's Section
@@ -118,7 +116,6 @@ ggplot(data = songs, aes(valence, spotify_track_popularity) ) +
 From the plots above, we see that while these are the "strongest" correlated parameters 
 to our response variable, they are all quite weakly correlated with them. While `peak_position` which is the song's peak on the billboard charts (with 1 being the best) does show a negative correlation with the track popularity, it is quite interestingly not a fantastic predictor, we see a number of number one songs on the billboard charts with low popularity on Spotify. The binary variables `spotify_track_explicit` also shows that there's popular songs that are both explicit and not explicit, so it's strong correlation must come from the fact that there are fewer unpopular (less that 25 popularity) explicit songs. `acousticness` and `valence` are also both audio features that are negatively correlated to the popularity, showing that people must not like highly acoustic or valeant (highly positive) music. While `loudness` is quite a dramatic regression line, in some ways it is similar to `tempo` where most values are centered in a certain range, but this likely does have more effect on the popularity. As we've seen with all these variables we will likely need them all in tandem in order to create a model to predict the popularity of the songs, but we do have correlation in some form across many variables, so `spotify_track_popularity` should be a good response variable. 
 
-\clearpage
 
 ### Anirudh's Section
 
