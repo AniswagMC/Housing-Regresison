@@ -12,6 +12,7 @@ library(ggcorrplot)
 library(corrplot)
 library(tidyverse)
 library("GGally")
+library(dplyr)
 songs <- read.csv("joined_billboard_audiofeature.csv")
 library(knitr)
 opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
@@ -174,3 +175,41 @@ pop_n_plot
 ```
 
 To better understand the spread of the data, four groups have been constructed, `Pop25`, which contains data for all values of `spotify_track_popularity < 25`; `Pop50` for $25 \leq$ `spotify_track_popularity` $< 50$; `Pop75` for $50 \leq$ `spotify_track_popularity` $< 75$; and finally, `Pop100` for `spotify_track_popularity` $> 75$. It is evident that a large portion of the songs get ranked between $25 \leq$ `spotify_track_popularity` $< 75$, while only 1262 out of the 24169 entries are ranked equal to or above 75.
+
+## Results and Analysis
+```{r loading-data-sets, echo=FALSE}
+train <- read.csv("training.csv")
+train <- train %>% select(-c("X", "X.1"))
+validation <- read.csv("validation.csv")
+validation <- validation %>% select(-c("X", "X.1"))
+test <- read.csv("test.csv")
+test <- test %>% select(-c("X"))
+
+##Some useful functions for comparison
+mse <- function(actualValues, predictedValues){
+  mean((actualValues - predictedVaues)^2)
+}
+```
+
+### Training models 
+
+### Steve Model 
+
+### Aishwarya Model 
+
+### Anirudh Model 
+
+### Zack Model 
+
+### Comparing the models 
+
+### Putting them all together 
+
+## Results and Discussion 
+
+### Results 
+
+### Discussion 
+
+### Conclusion
+
