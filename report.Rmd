@@ -184,6 +184,11 @@ validation <- read.csv("validation.csv")
 validation <- validation %>% select(-c("X", "X.1"))
 test <- read.csv("test.csv")
 test <- test %>% select(-c("X"))
+
+##Some useful functions for comparison
+mse <- function(actualValues, predictedValues){
+  mean((actualValues - predictedVaues)^2)
+}
 ```
 
 ### Training models 
