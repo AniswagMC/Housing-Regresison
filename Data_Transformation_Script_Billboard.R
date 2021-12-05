@@ -31,3 +31,13 @@ training_set <- joined[training_idxs,]
 test_set <- joined[-training_idxs,]
 write.csv(training_set, "training.csv")
 write.csv(test_set, "test.csv")
+
+
+train_raw <- read.csv("training.csv")
+n <- nrow(train_raw)
+trainidx <- sample.int(n, floor(n * .75))
+testidx <- setdiff(1:n, trainidx)
+train <- train_raw[trainidx, ]
+validation <- train_raw[-trainidx,]
+write.csv(train, "training.csv")
+write.csv(validation, "validation.csv")
