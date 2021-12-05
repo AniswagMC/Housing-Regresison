@@ -1,5 +1,5 @@
 ---
-title: "Stage 2 report"
+title: "Stage 3 report"
 output: pdf_document
 editor_options: 
   chunk_output_type: console
