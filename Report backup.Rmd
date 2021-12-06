@@ -1,5 +1,5 @@
 ---
-title: "Stage 3 report"
+title: "Stage 2 report"
 output: pdf_document
 editor_options: 
   chunk_output_type: console
@@ -13,7 +13,6 @@ library(corrplot)
 library(tidyverse)
 library("GGally")
 library(patchwork)
-library(dplyr)
 songs <- read.csv("joined_billboard_audiofeature.csv")
 library(knitr)
 opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
@@ -57,8 +56,8 @@ bd_clean <- select(songs, -performer, -song, -spotify_genre, -spotify_track_albu
 ```
 
 Next we make a correlation plot to have a broad overview of what variables may be connected to our response as well as with each other:
-```{r, echo = FALSE, fig.align = 'center'}
-options(repr.plot.width=10, repr.plot.height=10)
+```{r}
+options(repr.plot.width=12, repr.plot.height=12)
 cor_matrix <- round(cor(bd_clean), 1)
 corrplot(cor_matrix,
    method = "color", 
@@ -76,7 +75,7 @@ We had briefly explained in our stage 2 report that we originally chose `peak_pe
 `spotify_track_popularity` is correllated with almost all parameters in our data set. This means we are much more likely to be able to actually predict it's popularity based on the values of the other parameters, which will preform better than `peak_performance` did. 
 
 Here we see the two least correlated variables with respect to `spotify_track_popularity`:
-```{r no-corr-popularity, warning=FALSE, echo = FALSE, fig.width = 12, fig.height = 5}
+```{r no-corr-popularity, warning=FALSE}
 options(repr.plot.width=10, repr.plot.height=4)
 mean_popularity <- mean(songs$spotify_track_popularity)
 p1 <- ggplot(data = songs, aes(tempo, spotify_track_popularity) ) + 
@@ -100,7 +99,7 @@ As we've seen with all these variables in the correlation matrix we will likely 
 
 ### Further Exploration Of Data
 
-```{r, echo = FALSE, fig.width = 12, fig.height = 5}
+```{r}
 options(repr.plot.width=10, repr.plot.height=4)
 popularity_boxplot = songs %>% 
                       ggplot(aes(x = "", y = spotify_track_popularity)) +
@@ -141,48 +140,8 @@ popularity_boxplot + pop_n_plot
 summary(songs$spotify_track_popularity)
 ```
 
-
 Spotify popularity ranges from 0 to 100. The boxplot alongside the five number summary helps us understand that the median popularity is 43. This suggests that a majority of the songs are ranked lower in popularity, hence the higher popularity ranks are coveted. 
 
 \vspace{10pt}
 
 To better understand the spread of the data, four groups have been constructed, `Pop25`, which contains data for all values of `spotify_track_popularity < 25`; `Pop50` for $25 \leq$ `spotify_track_popularity` $< 50$; `Pop75` for $50 \leq$ `spotify_track_popularity` $< 75$; and finally, `Pop100` for `spotify_track_popularity` $> 75$. It is evident that a large portion of the songs get ranked between $25 \leq$ `spotify_track_popularity` $< 75$, while only 1262 out of the 24169 entries are ranked equal to or above 75.
-
-
-## Results and Analysis
-```{r loading-data-sets, echo=FALSE, fig.height = 5}
-train <- read.csv("training.csv")
-train <- train %>% select(-c("X", "X.1"))
-validation <- read.csv("validation.csv")
-validation <- validation %>% select(-c("X", "X.1"))
-test <- read.csv("test.csv")
-test <- test %>% select(-c("X"))
-
-##Some useful functions for comparison
-mse <- function(actualValues, predictedValues){
-  mean((actualValues - predictedVaues)^2)
-}
-```
-
-### Training models 
-
-### Steve Model 
-
-### Aishwarya Model 
-
-### Anirudh Model 
-
-### Zack Model 
-
-### Comparing the models 
-
-### Putting them all together 
-
-## Results and Discussion 
-
-### Results 
-
-### Discussion 
-
-### Conclusion
-
