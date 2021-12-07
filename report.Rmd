@@ -5,7 +5,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, echo = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(ggcorrplot)
@@ -110,13 +110,10 @@ popularity_boxplot = songs %>%
                       labs(x = "", y = "Spotify Track Popularity") +
                       theme(plot.title = element_text(hjust = 0.5))
 
-
-
 pop25 = songs %>% filter(spotify_track_popularity <= 25)
 pop50 = songs %>% filter(spotify_track_popularity > 25 & spotify_track_popularity <= 50)
 pop75 = songs %>% filter(spotify_track_popularity > 50 & spotify_track_popularity <= 75)
 pop100 = songs %>% filter(spotify_track_popularity > 75)
-
 
 pop25_df = cbind("Pop25", nrow(pop25)) 
 pop50_df = cbind("Pop50", nrow(pop50)) 
@@ -136,7 +133,6 @@ pop_n_plot = pop_all_df %>%
               theme(plot.title = element_text(hjust = 0.5)) +
               geom_text(aes(label = n), vjust = -0.5, size = 3,
               position = position_dodge(0.9))
-
 
 popularity_boxplot + pop_n_plot
 summary(songs$spotify_track_popularity)
@@ -262,11 +258,82 @@ rbind(mse_names, model_mses)
 
 From our choices of linear models, we can see that the reduced model of taking all the predictors that had less than 2e-16 for their p-value in the full model performed the best in terms of prediction on our validation set. However, the difference is very marginal. Our best model has an MSE of 689.5128.
 
-### Aishwarya Model 
+### Ridge & LASSO Regression Model 
+```{r echo = FALSE, error = FALSE}
+#import library for lasso regression
+library(glmnet)
+library(tidyverse)
+library(MASS)
+set.seed(123)
 
-### Anirudh Model 
+#import and clean data
+train_data <- read.csv("training.csv")
+train_data_clean <- dplyr::select(train_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
+x <- as.matrix(train_data_clean[, names(train_data_clean) != "peak_position"])
+y <- as.vector(train_data_clean$peak_position)
 
-### Zack Model 
+#50 runs of 5-fold CV
+lambdas <- exp(seq(-5, 5, by=0.5))
+n <- nrow(x)
+k <- 5
+ii <- (1:n) %% k + 1
+N <- 50
+mspe_lasso <- rep(0, N)
+mspe_ridge <- rep(0, N)
+mspe_full = rep(0, N)
+for (i in 1:N) {
+  ii <- sample(ii)
+  pred_lasso <- rep(0, n)
+  pred_ridge <- rep(0, n)
+  pred_full = rep(0, n)
+  for (j in 1:k) {
+    reg_ridge <- cv.glmnet(
+      x = x[ii != j, ], y = y[ii != j], lambda = lambdas,
+      nfolds = 5, alpha = 0, family = "gaussian"
+    )
+    reg_lasso <- cv.glmnet(
+      x = x[ii != j, ], y = y[ii != j], lambda = lambdas,
+      nfolds = 5, alpha = 1, family = "gaussian"
+    )
+    
+    full = lm(peak_position ~ ., data = train_data_clean[ii != j, ])
+    pred_ridge[ii == j] <- predict(reg_ridge, s = "lambda.min", newx = x[ii == j, ])
+    pred_lasso[ii == j] <- predict(reg_lasso, s = "lambda.min", newx = x[ii == j, ])
+    pred_full[ii == j] <- predict(full, newdata = train_data_clean[ii == j, ])
+  }
+  mspe_ridge[i] <- mean((y - pred_ridge)^2)
+  mspe_lasso[i] <- mean((y - pred_lasso)^2)
+  mspe_full[i] <- mean((y - pred_full)^2)
+}
+boxplot(mspe_ridge, mspe_lasso, mspe_full, names = c("Ridge", "Lasso", "Full"))
+
+#plot of regressions
+plot(reg_ridge) 
+plot(reg_lasso) 
+plot(full)
+plot(reg_ridge$glmnet.fit, main = 'Ridge')
+#abline(v = sum(abs(coef(ridge.glmnet))))
+plot(reg_lasso$glmnet.fit, main = 'Lasso')
+#abline(v = sum(abs(coef(lasso.glmnet)))) 
+
+# make predictions with regression models
+test_data <- read.csv("test.csv")
+test_data_clean <- dplyr::select(test_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
+x_test <- as.matrix(test_data_clean[, names(test_data_clean) != "peak_position"])
+y_test <- as.vector(test_data_clean$peak_position)
+
+# evaluate model predicitons
+ridge_pred <- predict(reg_ridge, newx = x_test, s = "lambda.min")
+lasso_pred <- predict(reg_lasso, newx = x_test, s = "lambda.min")
+ridge_mse <- mean((y_test - ridge_pred)^2)
+lasso_mse <- mean((y_test - lasso_pred)^2)
+
+ridge_mse
+lasso_mse
+```
+
+
+### Random Forest Model 
 As we've seen in the EDA across the scatterplots, it is not immediately clear that a linear model fits our dataset very well. Since random forests are one of the best "out of the box" models, we will attempt to use random forests to predict the popularity of our songs. We will compare two different models, one with all fields and one with those with 0 correlation to our response removed. 
 ```{r random-forests, echo=FALSE}
 #trains random forest on all fields 
@@ -309,9 +376,9 @@ We can see from the above plots that date is by far the biggest contributor to t
 
 ### Putting them all together 
 
-## Results and Discussion 
+### Results and Discussion 
 
-### Results 
+### Results
 
 ### Discussion 
 
