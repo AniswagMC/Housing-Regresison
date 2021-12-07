@@ -5,7 +5,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, echo = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(ggcorrplot)
@@ -53,7 +53,7 @@ We as a group agreed to working with this dataset and on this question because w
 \vspace{10pt}
 
 We first cleaned our dataset by removing obviously non-useful variables like names. (However, while we recognize that different genres may have differing levels of popularity, for simplicity we will leave out this variable as the "genre" of certain songs may be ambiguous and there are too many categories to keep track of.)
-```{r}
+```{r, echo=FALSE}
 bd_clean <- select(songs, -performer, -song, -spotify_genre, -spotify_track_album, -date)
 ```
 
@@ -77,7 +77,7 @@ We had briefly explained in our stage 2 report that we originally chose `peak_pe
 `spotify_track_popularity` is correllated with almost all parameters in our data set. This means we are much more likely to be able to actually predict it's popularity based on the values of the other parameters, which will preform better than `peak_performance` did. 
 
 Here we see the two least correlated variables with respect to `spotify_track_popularity`:
-```{r no-corr-popularity, warning=FALSE, echo = FALSE, fig.width = 12, fig.height = 5}
+```{r no-corr-popularity, warning=FALSE, echo = FALSE, message=FALSE,fig.width = 12, fig.height = 5}
 options(repr.plot.width=10, repr.plot.height=4)
 mean_popularity <- mean(songs$spotify_track_popularity)
 p1 <- ggplot(data = songs, aes(tempo, spotify_track_popularity) ) + 
@@ -110,13 +110,10 @@ popularity_boxplot = songs %>%
                       labs(x = "", y = "Spotify Track Popularity") +
                       theme(plot.title = element_text(hjust = 0.5))
 
-
-
 pop25 = songs %>% filter(spotify_track_popularity <= 25)
 pop50 = songs %>% filter(spotify_track_popularity > 25 & spotify_track_popularity <= 50)
 pop75 = songs %>% filter(spotify_track_popularity > 50 & spotify_track_popularity <= 75)
 pop100 = songs %>% filter(spotify_track_popularity > 75)
-
 
 pop25_df = cbind("Pop25", nrow(pop25)) 
 pop50_df = cbind("Pop50", nrow(pop50)) 
@@ -136,7 +133,6 @@ pop_n_plot = pop_all_df %>%
               theme(plot.title = element_text(hjust = 0.5)) +
               geom_text(aes(label = n), vjust = -0.5, size = 3,
               position = position_dodge(0.9))
-
 
 popularity_boxplot + pop_n_plot
 summary(songs$spotify_track_popularity)
@@ -171,13 +167,14 @@ mse <- function(actualValues, predictedValues){
 
 From the exploratory data analysis, we take out the predictor variables with no correlation to the response variable, as well as the other ones explained before in the EDA.
 
-```{r}
+```{r, echo=FALSE}
 train_steve <- select(train, -performer, -song, -spotify_genre, -spotify_track_album, -date, -key, -tempo)
 validation_steve <- select(validation, -performer, -song, -spotify_genre, -spotify_track_album, -date, -key, -tempo)
 test_steve <- select(test, -performer, -song, -spotify_genre, -spotify_track_album, -date, -key, -tempo)
 ```
 
 Then we train a linear regression model on the training set, and show its diagnostic plots:
+
 ```{r, echo = FALSE, fig.align = "center"}
 par(mfrow = c(1,2))
 full_model <- lm(spotify_track_popularity ~ ., data = train_steve)
@@ -188,7 +185,7 @@ The interesting part of the full model is that all predictor variables end up wi
 
 
 As we want to find some optimal combination of predictor variables, we try forward and backwards selection to get some examples. The graphs shown are the BIC and Cp for forward selection and backwards selection of predictors respectively:
-```{r, echo = FALSE}
+```{r, fig.show="hold", out.width="50%", echo = FALSE}
 library(leaps)
 f_step <- regsubsets(spotify_track_popularity ~ ., data = train_steve, method = "forward")
 
@@ -231,14 +228,13 @@ info_plot_b
 From both stepwise selection methods, we can see that BIC and Cp both decrease when having more predictors. This may mean that models with more predictors are much more favored in terms of BIC and Cp, gives us reason to look at modes with more predictor variables, and lines up with our observation of how good our predictors are (small p-value) in our full model.
 
 We first try fitting a model recommended by the selection methods:
-```{r}
+```{r, echo=FALSE}
 reduced_1 <- lm(spotify_track_popularity ~ loudness + peak_position + spotify_track_explicit + valence + acousticness + danceability + weeks_on_chart + spotify_track_duration_ms, data = train_steve)
 
 ```
 
-
 For fun, we also fit a model based on choosing the variables with a p-value of less than 2e-16:
-```{r}
+```{r, echo=FALSE}
 reduced_2 <- lm(spotify_track_popularity ~ peak_position + weeks_on_chart + spotify_track_explicit + danceability + loudness + acousticness + valence, data = train_steve)
 ```
 Something noteworthy upon closer inspection is that the reduced model recommended by our stepwise selection methods is very similar to our model based on choosing the predictors with the lowest magnitude of p-values.
@@ -262,11 +258,107 @@ rbind(mse_names, model_mses)
 
 From our choices of linear models, we can see that the reduced model of taking all the predictors that had less than 2e-16 for their p-value in the full model performed the best in terms of prediction on our validation set. However, the difference is very marginal. Our best model has an MSE of 689.5128.
 
-### Aishwarya Model 
+For fun, we also fit a model based on choosing the variables with a p-value of less than 2e-16:
+```{r, echo=FALSE}
+reduced_2 <- lm(spotify_track_popularity ~ peak_position + weeks_on_chart + spotify_track_explicit + danceability + loudness + acousticness + valence, data = train_steve)
+```
+Something noteworthy upon closer inspection is that the reduced model recommended by our stepwise selection methods is very similar to our model based on choosing the predictors with the lowest magnitude of p-values.
 
-### Anirudh Model 
 
-### Zack Model 
+Finally, we compare our trained models by using it to predict those in our validation set. We will use MSE as our CV score since we are focused on predictive power:
+```{r, echo = FALSE}
+mse <- function(preds, obs) mean((obs - preds)^2)
+
+full_mse <- mse(predict(full_model, newdata = validation_steve), test$spotify_track_popularity)
+
+reduced1_mse <- mse(predict(reduced_1, newdata = validation_steve), test$spotify_track_popularity)
+
+reduced2_mse <- mse(predict(reduced_2, newdata = validation_steve), test$spotify_track_popularity)
+
+mse_names <- c("full model mse", "reduced model 1 mse", "reduced model 2 mse")
+model_mses <- c(full_mse, reduced1_mse, reduced2_mse)
+
+rbind(mse_names, model_mses)
+```
+
+From our choices of linear models, we can see that the reduced model of taking all the predictors that had less than 2e-16 for their p-value in the full model performed the best in terms of prediction on our validation set. However, the difference is very marginal. Our best model has an MSE of 689.5128.
+
+### Ridge & LASSO Regression Model 
+```{r echo = FALSE, eval = FALSE ,error = FALSE}
+#import library for lasso regression
+library(glmnet)
+library(tidyverse)
+library(MASS)
+set.seed(123)
+
+#import and clean data
+train_data <- read.csv("training.csv")
+train_data_clean <- dplyr::select(train_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
+x <- as.matrix(train_data_clean[, names(train_data_clean) != "peak_position"])
+y <- as.vector(train_data_clean$peak_position)
+
+#50 runs of 5-fold CV
+lambdas <- exp(seq(-5, 5, by=0.5))
+n <- nrow(x)
+k <- 5
+ii <- (1:n) %% k + 1
+N <- 50
+mspe_lasso <- rep(0, N)
+mspe_ridge <- rep(0, N)
+mspe_full = rep(0, N)
+for (i in 1:N) {
+  ii <- sample(ii)
+  pred_lasso <- rep(0, n)
+  pred_ridge <- rep(0, n)
+  pred_full = rep(0, n)
+  for (j in 1:k) {
+    reg_ridge <- cv.glmnet(
+      x = x[ii != j, ], y = y[ii != j], lambda = lambdas,
+      nfolds = 5, alpha = 0, family = "gaussian"
+    )
+    reg_lasso <- cv.glmnet(
+      x = x[ii != j, ], y = y[ii != j], lambda = lambdas,
+      nfolds = 5, alpha = 1, family = "gaussian"
+    )
+    
+    full = lm(peak_position ~ ., data = train_data_clean[ii != j, ])
+    pred_ridge[ii == j] <- predict(reg_ridge, s = "lambda.min", newx = x[ii == j, ])
+    pred_lasso[ii == j] <- predict(reg_lasso, s = "lambda.min", newx = x[ii == j, ])
+    pred_full[ii == j] <- predict(full, newdata = train_data_clean[ii == j, ])
+  }
+  mspe_ridge[i] <- mean((y - pred_ridge)^2)
+  mspe_lasso[i] <- mean((y - pred_lasso)^2)
+  mspe_full[i] <- mean((y - pred_full)^2)
+}
+boxplot(mspe_ridge, mspe_lasso, mspe_full, names = c("Ridge", "Lasso", "Full"))
+
+#plot of regressions
+plot(reg_ridge) 
+plot(reg_lasso) 
+plot(full)
+plot(reg_ridge$glmnet.fit, main = 'Ridge')
+#abline(v = sum(abs(coef(ridge.glmnet))))
+plot(reg_lasso$glmnet.fit, main = 'Lasso')
+#abline(v = sum(abs(coef(lasso.glmnet)))) 
+
+# make predictions with regression models
+test_data <- read.csv("test.csv")
+test_data_clean <- dplyr::select(test_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
+x_test <- as.matrix(test_data_clean[, names(test_data_clean) != "peak_position"])
+y_test <- as.vector(test_data_clean$peak_position)
+
+# evaluate model predicitons
+ridge_pred <- predict(reg_ridge, newx = x_test, s = "lambda.min")
+lasso_pred <- predict(reg_lasso, newx = x_test, s = "lambda.min")
+ridge_mse <- mean((y_test - ridge_pred)^2)
+lasso_mse <- mean((y_test - lasso_pred)^2)
+
+ridge_mse
+lasso_mse
+```
+
+
+### Random Forest Model 
 As we've seen in the EDA across the scatterplots, it is not immediately clear that a linear model fits our dataset very well. Since random forests are one of the best "out of the box" models, we will attempt to use random forests to predict the popularity of our songs. We will compare two different models, one with all fields and one with those with 0 correlation to our response removed. 
 ```{r random-forests, echo=FALSE}
 #trains random forest on all fields 
@@ -295,7 +387,7 @@ ggplot(data = rf_combined, aes(spotify_track_popularity, rf_correlated.predicted
 
 As we can see in the above graphics, where we plotted the expected values versus the predicted values against one another, we get a roughly linear line along the  y = x line shown in red. The models do not differ greatly between one another. We do however see that at the very high/low values our random forest predicts poorer than it does for values in the center. The mean squared error for the model with all parameters is `r rf_all.mse` and for the model removing the uncorrelated parameters is `r rf_correlated.mse`. 
 
-```{r more-rf-plots,fig.show="hold", out.width="50%", echo=FALSE}
+```{r more-rf-plots, fig.show="hold", out.width="50%", echo=FALSE}
 varImpPlot(rf_all, main = "Variable Importanct for all Paramater Model")
 
 ggplot(data = rf_combined, aes(date, spotify_track_popularity, colour = "Actual")) + geom_point() +
@@ -309,9 +401,9 @@ We can see from the above plots that date is by far the biggest contributor to t
 
 ### Putting them all together 
 
-## Results and Discussion 
+### Results and Discussion 
 
-### Results 
+### Results
 
 ### Discussion 
 
