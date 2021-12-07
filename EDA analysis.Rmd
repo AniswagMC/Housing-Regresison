@@ -1,0 +1,198 @@
+---
+title: "Steve.EDA"
+author: "Steve Kim"
+date: "11/5/2021"
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+The goal of this exploratory data analysis is to infer which predictors to use for our model.
+Our response variable will be the peak position of the song on the billboard, and our ultimate goal is to find out what variables will determine the response and ultimately predict it possibly using songs not in the data to see how good our model may be. Also, keep in mind that LOWER values of peak position is "better"
+```{r}
+bd <- read.csv("joined_billboard_audiofeature.csv")
+```
+
+\clearpage
+
+Now I will start by cleaning my dataset. First I will remove all irrelevant columns like names:
+(Spotify_genre was removed due to too many different classes, but we recognize that different genres have differing popularity, but that requires further data on popularity of genre, and for simplicity, will remove this variable.)
+```{r}
+bd_clean <- select(bd, -X, -performer, -song, -spotify_genre, -spotify_track_album)
+```
+
+
+
+After cleaning the data, I will use a correlation matrix between all the rest of my variables to understand the relationships between them. 
+```{r}
+library(ggcorrplot)
+cor_matrix <- round(cor(bd_clean), 1)
+ggcorrplot(cor_matrix)
+```
+
+
+
+
+From the correlation matrix, we can see that our response variable peak position has positive correlations with being listed explicit on spotify, speechiness, and negative correlations with weeks_on chart, spotify track duration, and spotify track popularity. When looking at all the variables, recall that the lower the peak position number is, the higher it is on the chart. 
+
+Plotting peak position and weeks on chart:
+```{r}
+plot(x = bd_clean$weeks_on_chart, y = bd_clean$peak_position)
+```
+From the plot we can clearly see that there does seem to be some kind of relationship between peak position and weeks on chart, which makes sense since hit songs at the top of the billboards will usually stay in relevance longer.
+
+
+Plotting peak position and spotify track duration:
+```{r}
+plot(x = bd_clean$spotify_track_duration_ms, y = bd_clean$peak_position)
+```
+We can see in general, it is very hard to distinguish a clear relationship between these two variables, since most songs are less than 500000 ms or < 8 min.
+
+
+
+
+
+
+
+Now we will compare regression models
+-Full model consists of all the variables:
+```{r}
+full_model <- lm(peak_position ~ ., data = bd_clean)
+summary(full_model)
+```
+
+
+-Partial model with only correlated variables according to the correlation matrix:
+```{r}
+corr_model <- lm(peak_position ~ weeks_on_chart + spotify_track_duration_ms + spotify_track_explicit + speechiness + spotify_track_popularity, data = bd_clean)
+summary(corr_model)
+```
+
+
+\clearpage
+
+Doing exhaustive search (up to 8 variables):
+```{r}
+library(leaps)
+exhaustive <- regsubsets(peak_position ~ ., data = bd_clean)
+summary(exhaustive)
+
+exhaustive_infocrit <- tibble(
+  BIC = summary(exhaustive)$bic, 
+  Cp = summary(exhaustive)$cp,
+  size = 1:8)
+
+exhaustive_info_plot <- exhaustive_infocrit %>% 
+  pivot_longer(-size, names_to="crit") %>%
+  ggplot(aes(size, value, color=crit)) + 
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~crit, 2, scales = "free_y") + 
+  scale_color_brewer(palette = "Set1") +
+  theme(axis.title.y = element_blank(), 
+        legend.position = "none")
+
+exhaustive_info_plot
+```
+The exhaustive search gives variables in order: weeks_on_chart, spotify_track_popularity, loudness, valence, acousticness, spotify_track_explicit, liveness, spotify_track_duration_ms.
+
+The CV graphs are very interesting in BIC and Mallow's Cp, as BIC suggests a model with smaller size (smaller amount of predictors), and Cp suggests a model with a bigger amount of predictors.
+
+
+
+
+Doing forward selection:
+```{r}
+stepup <- regsubsets(peak_position ~ ., data = bd_clean, method = "forward")
+summary(stepup)
+
+forward_infocrit <- tibble(
+  BIC = summary(stepup)$bic, 
+  Cp = summary(stepup)$cp,
+  size = 1:8)
+
+forward_info_plot <- forward_infocrit %>% 
+  pivot_longer(-size, names_to="crit") %>%
+  ggplot(aes(size, value, color=crit)) + 
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~crit, 2, scales = "free_y") + 
+  scale_color_brewer(palette = "Set1") +
+  theme(axis.title.y = element_blank(), 
+        legend.position = "none")
+
+forward_info_plot
+```
+The forward search on all the variables give the exact same (8 variable) result given from exhaustive search.
+Hence the BIC and CP are also both identical.
+
+
+
+\clearpage
+
+
+We will now use K-fold CV on the dataset to see which one of these models give the lowest CV:
+```{R}
+kfold_cv <- function(data, estimator, predictor, kfolds = 5, responsename = "y") {
+  n <- nrow(data)
+  fold.labels <- sample(rep(1:kfolds, length.out = n))
+  mses <- double(kfolds)
+  for (fold in 1:kfolds) {
+    test.rows <- fold.labels == fold
+    train <- data[!test.rows, ]
+    test <- data[test.rows, ]
+    current_model <- estimator(train)
+    predictions <- predictor(current_model, test)
+    test_responses <- test[, responsename]
+    test_errors <- test_responses - predictions
+    mses[fold] <- mean(test_errors^2)
+  }
+  mean(mses)
+}
+
+```
+
+-Doing K-fold CV on the full model:
+```{r}
+set.seed(123)
+est <- function(dataset)
+  lm(peak_position ~ ., data = dataset)
+
+pred <- function(model, dataset)
+  predict(model, newdata = dataset)
+
+kfold_cv(bd_clean, est, pred, 5, "peak_position")
+```
+We get around 528.092 for our K-fold CV with K = 5 on our full model
+
+
+-Doing K-fold CV on our partial (correlated covariates) model:
+```{r}
+set.seed(124)
+est <- function(dataset)
+  lm(peak_position ~ weeks_on_chart + spotify_track_duration_ms + spotify_track_explicit + speechiness + spotify_track_popularity, data = dataset)
+
+kfold_cv(bd_clean, est, pred, 5, "peak_position")
+```
+Hence we get 543.471 for our K-fold CV with K = 5 on our partial (correlated) model
+
+
+-Doing K-fold CV on our exhaustive search / forward selection model:
+```{r}
+set.seed(125)
+est <- function(dataset)
+  lm(peak_position ~ weeks_on_chart + spotify_track_popularity + loudness + valence + acousticness + spotify_track_explicit + liveness + spotify_track_duration_ms, data = dataset)
+
+kfold_cv(bd_clean, est, pred, 5, "peak_position")
+```
+We get around 528.145 for our K-fold CV with K = 5 on our exhaustive / forward selection model. We can see that the CV score for this model is very similar to the full model.
+
+
+Hence 528.092, 543.471, and 528.145 are our cv scores for the full model, partial(correlated) model, and the exhaustive/forward selection model respectively.

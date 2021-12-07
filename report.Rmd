@@ -1,5 +1,5 @@
 ---
-title: "Stage 2 report"
+title: "Stage 3 report"
 output: pdf_document
 editor_options: 
   chunk_output_type: console
@@ -12,9 +12,22 @@ library(ggcorrplot)
 library(corrplot)
 library(tidyverse)
 library("GGally")
+library(patchwork)
+library(dplyr)
 songs <- read.csv("joined_billboard_audiofeature.csv")
 library(knitr)
 opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
+
+train_raw <- read.csv("training.csv")
+train_raw <- train_raw  %>% select(-c("X"))
+
+n <- nrow(train_raw)
+trainidx <- sample.int(n, floor(n * .75))
+validationidx <- setdiff(1:n, trainidx)
+train <- train_raw[trainidx, ]
+validation <- train_raw[validationidx,]
+
+test <- read.csv("test.csv")
 ```
 
 
@@ -34,22 +47,18 @@ We as a group agreed to working with this dataset and on this question because w
 
 ## Exploratory Data Analysis
 
-### Exploration of Peak Position on Billboard as Response Variable
+### Quick briefing of selection of response variable
 
-Originally, we had planned to use the peak position on the billboard as a response variable, and model that using features (covariates) of the actual song as described in the data. However,  this response variable is not an optimal one to use, and through plots, logical reasoning, and exploratory data analysis we will show why and how we arose to this conclusion and led to our final decision of response variable.
-
-\vspace{18pt}
+\vspace{10pt}
 
 We first cleaned our dataset by removing obviously non-useful variables like names. (However, while we recognize that different genres may have differing levels of popularity, for simplicity we will leave out this variable as the "genre" of certain songs may be ambiguous and there are too many categories to keep track of.)
 ```{r}
-bd_clean <- select(songs, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
+bd_clean <- select(songs, -performer, -song, -spotify_genre, -spotify_track_album, -date)
 ```
 
-\vspace{18pt}
-
 Next we make a correlation plot to have a broad overview of what variables may be connected to our response as well as with each other:
-```{r}
-options(repr.plot.width=15, repr.plot.height=15)
+```{r, echo = FALSE, fig.align = 'center'}
+options(repr.plot.width=10, repr.plot.height=10)
 cor_matrix <- round(cor(bd_clean), 1)
 corrplot(cor_matrix,
    method = "color", 
@@ -57,94 +66,51 @@ corrplot(cor_matrix,
    order = "AOE", 
    number.cex=0.4)
 ```
-This is where we became very skeptical about our selected response variable: peak_position. The chart shows that a song's peak position on the billboards have little to no correlation to audio features. Even with actual audio features that our response variable had little correlation with, take "speechiness" for example, has a plot that looks like:
-```{r}
-plot(x = bd_clean$speechiness, y = bd_clean$peak_position,
-     xlab = "Spoken words on a track", ylab = "Billboard peak position")
-```
-Even a quick glance at these plots show that these audio features have little to no inherent effect on where the song ends up on the chart. Sure we had some correlated features like the weeks on the billboard and spotify song popularity, but those variables and their relation to peak_position is quite obvious and doesnt quite cover our goal of wanting to predict a songs position through mostly its AUDIO features.
 
-\vspace{18pt}
+We had briefly explained in our stage 2 report that we originally chose `peak_performance` as our response variable, but with its noticeably low correlations with most of the predictors, we switched our response to `spotify_track_popularity`
 
-We've seen here that because of the low correlation with the other features `peak_performance` may perform quite poorly as the response variable to our question. Hence we will continue to explore for better response variables to try and better predict a song's popularity. 
+\vspace{10pt}
 
-\clearpage
+## Exploration of Spotify Track Popularity on Billboard as Response Variable
 
-
-
-## Exploration of Spotify Track Populatiry on Billboard as Response Variable
-
-As we have seen above, `peak_performance` isn't the best response variable for popularity in our data set since it's not correlated with many of the audio features. In this section we will look at another measure of popularity of a song which our data set contains, this is `spotify_track_popularity`. 
-
-As we can see in the correlation plot above in the above section, `spotify_track_popularity` has a correlation with almost all parameters in our data set. This means we are much more likely to be able to actually predict it's popularity based on the values of the other parameters, which will preform better than `peak_performance` did. 
+`spotify_track_popularity` is correllated with almost all parameters in our data set. This means we are much more likely to be able to actually predict it's popularity based on the values of the other parameters, which will preform better than `peak_performance` did. 
 
 Here we see the two least correlated variables with respect to `spotify_track_popularity`:
-
-```{r no-corr-popularity, warning=FALSE}
+```{r no-corr-popularity, warning=FALSE, echo = FALSE, fig.width = 12, fig.height = 5}
+options(repr.plot.width=10, repr.plot.height=4)
 mean_popularity <- mean(songs$spotify_track_popularity)
-ggplot(data = songs, aes(tempo, spotify_track_popularity) ) + 
+p1 <- ggplot(data = songs, aes(tempo, spotify_track_popularity) ) + 
   geom_point() + geom_smooth(method="lm", aes(color = "Regression Line")) + geom_hline(aes(yintercept = mean_popularity, color = "Mean")) + 
   scale_color_manual(name = "legend", values = c("red", "blue")) +
   labs(x = "Tempo", y = "Spotify Popularity", title = "Spotify Track Popularity Compared to Tempo")
 
-ggplot(data = songs, aes(key, spotify_track_popularity) ) + 
+p2 <- ggplot(data = songs, aes(key, spotify_track_popularity) ) + 
   geom_point() + geom_smooth(method="lm", aes(color = "Regression Line")) + geom_hline(aes(yintercept = mean_popularity, color = "Mean")) + 
   scale_color_manual(name = "legend", values = c("red", "blue")) + 
   labs(x = "Key", y = "Spotify Popularity", title = "Spotify Track Popularity Compared to Key")
+p1 + p2
 ```
-As we can see `key` is quite a unique variable, since it's discrete on a scale of 1-11. But on the plot here we see that the values are roughly equally distributed across the different keys, and all the keys have nearly full coverage of popularity. We see that the mean of the track popularity almost exactly matches the univariate regression line of the two variables, which means that there's almost no information gained about the popularity through looking at the `key`. We expect that using LASSO, this would be thrown out of the model quite quickly, or minimized to be near zero using Ridge, so I'd expect this to have very little weight in any final model we pick. The `key` is an integer mapping to the pitch of the song (ex. A, B, C, A# ...) which explains the lack of information we get from that variable, as popular songs often come in many different pitches. 
+These two variables have been explained in greater detail in the earlier report, but are still quite relevant to mention as in our data analysis in training and testing models, these two were filtered out due to 0 correlation with the response `spotify_track_popularity` as well as to cut down on the number of our predictors to make model selection that much easier.
 
-With respect to popularity `tempo` is also a weird parameter. It's clear from looking at this plot that the vast majority of tempos fall between roughly 60-200 bpm. When looking at the data here it's easy to tell there's not a lot of information to gain here. We see that reinforced from the regression line that nearly matches the mean here too. Logically there's no magic tempo that makes songs into hits and almost all songs fall between this set range, so there's no way of determining which song of a specific tempo is a hit versus one that is unpopular, without using some other parameter as well, so intuitively tempo will not play a large role in predicting the popularity. If we use this for anything, it may make more sense to include tempo as a categorical variable to represent whether a song falls into this range of tempos or not. 
+As we've seen with all these variables in the correlation matrix we will likely need many in tandem in order to create a model to predict the popularity of the songs, but we do have correlation in some form across many variables, so `spotify_track_popularity` should be a better response variable than `peak_performance`, so we will use this as our response variable. 
 
-The following plots are some of the higest correlation with `spotify_track_popularity`:
-
-```{r strong-corr, warning=FALSE}
-ggplot(data = songs, aes(peak_position, spotify_track_popularity) ) + 
-  geom_point() + geom_smooth(method="lm", aes(color = "Regression Line")) + geom_hline(aes(yintercept = mean_popularity, color = "Mean")) + 
-  scale_color_manual(name = "legend", values = c("red", "blue")) + 
-  labs(x = "Peak Position", y = "Spotify Popularity", title = "Spotify Track Popularity Compared to Peak Position")
-
-ggplot(data = songs, aes(spotify_track_explicit, spotify_track_popularity) ) + 
-  geom_point() + geom_smooth(method="lm", aes(color = "Regression Line")) + geom_hline(aes(yintercept = mean_popularity, color = "Mean")) + 
-  scale_color_manual(name = "legend", values = c("red", "blue")) + 
-  labs(x = "Is Track Explicit", y = "Spotify Popularity", title = "Spotify Track Popularity Compared to Explicit")
-
-ggplot(data = songs, aes(acousticness, spotify_track_popularity) ) + 
-  geom_point() + geom_smooth(method="lm", aes(color = "Regression Line")) + geom_hline(aes(yintercept = mean_popularity, color = "Mean")) + 
-  scale_color_manual(name = "legend", values = c("red", "blue")) + 
-  labs(x = "Acousticness", y = "Spotify Popularity", title = "Spotify Track Popularity Compared to Acousticness")
-
-ggplot(data = songs, aes(loudness, spotify_track_popularity) ) + 
-  geom_point() + geom_smooth(method="lm", aes(color = "Regression Line")) + geom_hline(aes(yintercept = mean_popularity, color = "Mean")) + 
-  scale_color_manual(name = "legend", values = c("red", "blue")) + 
-  labs(x = "Loudness", y = "Spotify Popularity", title = "Spotify Track Popularity Compared to Loudness")
-
-ggplot(data = songs, aes(valence, spotify_track_popularity) ) + 
-  geom_point() + geom_smooth(method="lm", aes(color = "Regression Line")) + geom_hline(aes(yintercept = mean_popularity, color = "Mean")) + 
-  scale_color_manual(name = "legend", values = c("red", "blue")) + 
-  labs(x = "Valence", y = "Spotify Popularity", title = "Spotify Track Popularity Compared to Valence")
-```
-From the plots above, we see that while these are the "strongest" correlated parameters 
-to our response variable, they are all quite weakly correlated with them. While `peak_position` which is the song's peak on the billboard charts (with 1 being the best) does show a negative correlation with the track popularity, it is quite interestingly not a fantastic predictor, we see a number of number one songs on the billboard charts with low popularity on Spotify. The binary variables `spotify_track_explicit` also shows that there's popular songs that are both explicit and not explicit, so it's strong correlation must come from the fact that there are fewer unpopular (less that 25 popularity) explicit songs. `acousticness` and `valence` are also both audio features that are negatively correlated to the popularity, showing that people must not like highly acoustic or valeant (highly positive) music. While `loudness` is quite a dramatic regression line, in some ways it is similar to `tempo` where most values are centered in a certain range, but this likely does have more effect on the popularity. 
+\vspace{10pt}
 
 
-As we've seen with all these variables we will likely need many in tandem in order to create a model to predict the popularity of the songs, but we do have correlation in some form across many variables, so `spotify_track_popularity` should be a better response variable than `peak_performance`, so we will use this as our response variable. 
 
 ### Further Exploration Of Data
 
-```{r}
+```{r, echo = FALSE, fig.width = 12, fig.height = 5}
+options(repr.plot.width=10, repr.plot.height=4)
 popularity_boxplot = songs %>% 
                       ggplot(aes(x = "", y = spotify_track_popularity)) +
                       geom_boxplot() + 
                       ggtitle("Spotify Track Popularity Boxplot") + 
                       labs(x = "", y = "Spotify Track Popularity") +
                       theme(plot.title = element_text(hjust = 0.5))
-popularity_boxplot
-summary(songs$spotify_track_popularity)
-```
-While it was expected that spotify popoularities cover the entire range from 0 to 100, the boxplot, alongside the five number summary helps understand that the median popularity is 43. This suggests that a lot of songs do not rank highly in popularity. Hence, the higher popularity ranks are coveted. We will further explore how many songs are rated in four categories, as described below.
 
-```{r}
+
+
 pop25 = songs %>% filter(spotify_track_popularity <= 25)
 pop50 = songs %>% filter(spotify_track_popularity > 25 & spotify_track_popularity <= 50)
 pop75 = songs %>% filter(spotify_track_popularity > 50 & spotify_track_popularity <= 75)
@@ -170,7 +136,53 @@ pop_n_plot = pop_all_df %>%
               geom_text(aes(label = n), vjust = -0.5, size = 3,
               position = position_dodge(0.9))
 
-pop_n_plot
+
+popularity_boxplot + pop_n_plot
+summary(songs$spotify_track_popularity)
 ```
 
+
+Spotify popularity ranges from 0 to 100. The boxplot alongside the five number summary helps us understand that the median popularity is 43. This suggests that a majority of the songs are ranked lower in popularity, hence the higher popularity ranks are coveted. 
+
+\vspace{10pt}
+
 To better understand the spread of the data, four groups have been constructed, `Pop25`, which contains data for all values of `spotify_track_popularity < 25`; `Pop50` for $25 \leq$ `spotify_track_popularity` $< 50$; `Pop75` for $50 \leq$ `spotify_track_popularity` $< 75$; and finally, `Pop100` for `spotify_track_popularity` $> 75$. It is evident that a large portion of the songs get ranked between $25 \leq$ `spotify_track_popularity` $< 75$, while only 1262 out of the 24169 entries are ranked equal to or above 75.
+
+
+## Results and Analysis
+```{r loading-data-sets, echo=FALSE, fig.height = 5}
+train <- read.csv("training.csv")
+train <- train %>% select(-c("X", "X.1"))
+validation <- read.csv("validation.csv")
+validation <- validation %>% select(-c("X", "X.1"))
+test <- read.csv("test.csv")
+test <- test %>% select(-c("X"))
+
+##Some useful functions for comparison
+mse <- function(actualValues, predictedValues){
+  mean((actualValues - predictedVaues)^2)
+}
+```
+
+### Training models 
+
+### Steve Model 
+
+### Aishwarya Model 
+
+### Anirudh Model 
+
+### Zack Model 
+
+### Comparing the models 
+
+### Putting them all together 
+
+## Results and Discussion 
+
+### Results 
+
+### Discussion 
+
+### Conclusion
+
