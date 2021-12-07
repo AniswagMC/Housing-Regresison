@@ -178,7 +178,7 @@ test_steve <- select(test, -performer, -song, -spotify_genre, -spotify_track_alb
 ```
 
 Then we train a linear regression model on the training set, and show its diagnostic plots:
-```{r, echo = FALSE, fig.align = center}
+```{r, echo = FALSE, fig.align = "center"}
 par(mfrow = c(1,2))
 full_model <- lm(spotify_track_popularity ~ ., data = train_steve)
 plot(full_model, 1)
@@ -295,7 +295,7 @@ ggplot(data = rf_combined, aes(spotify_track_popularity, rf_correlated.predicted
 
 As we can see in the above graphics, where we plotted the expected values versus the predicted values against one another, we get a roughly linear line along the  y = x line shown in red. The models do not differ greatly between one another. We do however see that at the very high/low values our random forest predicts poorer than it does for values in the center. The mean squared error for the model with all parameters is `r rf_all.mse` and for the model removing the uncorrelated parameters is `r rf_correlated.mse`. 
 
-```{r more-rf-plots,fig.show="hold", out.width="50%", echo=FALSE }
+```{r more-rf-plots,fig.show="hold", out.width="50%", echo=FALSE}
 varImpPlot(rf_all, main = "Variable Importanct for all Paramater Model")
 
 ggplot(data = rf_combined, aes(date, spotify_track_popularity, colour = "Actual")) + geom_point() +
