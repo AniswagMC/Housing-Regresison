@@ -1,5 +1,5 @@
 ---
-title: "Stage 3 report"
+title: "Stage 2 report"
 output: pdf_document
 editor_options: 
   chunk_output_type: console
@@ -13,8 +13,6 @@ library(corrplot)
 library(tidyverse)
 library("GGally")
 library(patchwork)
-library(dplyr)
-library("randomForest")
 songs <- read.csv("joined_billboard_audiofeature.csv")
 library(knitr)
 opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
@@ -58,8 +56,8 @@ bd_clean <- select(songs, -performer, -song, -spotify_genre, -spotify_track_albu
 ```
 
 Next we make a correlation plot to have a broad overview of what variables may be connected to our response as well as with each other:
-```{r, echo = FALSE, fig.align = 'center'}
-options(repr.plot.width=10, repr.plot.height=10)
+```{r}
+options(repr.plot.width=12, repr.plot.height=12)
 cor_matrix <- round(cor(bd_clean), 1)
 corrplot(cor_matrix,
    method = "color", 
@@ -77,7 +75,7 @@ We had briefly explained in our stage 2 report that we originally chose `peak_pe
 `spotify_track_popularity` is correllated with almost all parameters in our data set. This means we are much more likely to be able to actually predict it's popularity based on the values of the other parameters, which will preform better than `peak_performance` did. 
 
 Here we see the two least correlated variables with respect to `spotify_track_popularity`:
-```{r no-corr-popularity, warning=FALSE, echo = FALSE, fig.width = 12, fig.height = 5}
+```{r no-corr-popularity, warning=FALSE}
 options(repr.plot.width=10, repr.plot.height=4)
 mean_popularity <- mean(songs$spotify_track_popularity)
 p1 <- ggplot(data = songs, aes(tempo, spotify_track_popularity) ) + 
@@ -101,7 +99,7 @@ As we've seen with all these variables in the correlation matrix we will likely 
 
 ### Further Exploration Of Data
 
-```{r, echo = FALSE, fig.width = 12, fig.height = 5}
+```{r}
 options(repr.plot.width=10, repr.plot.height=4)
 popularity_boxplot = songs %>% 
                       ggplot(aes(x = "", y = spotify_track_popularity)) +
@@ -142,85 +140,8 @@ popularity_boxplot + pop_n_plot
 summary(songs$spotify_track_popularity)
 ```
 
-
 Spotify popularity ranges from 0 to 100. The boxplot alongside the five number summary helps us understand that the median popularity is 43. This suggests that a majority of the songs are ranked lower in popularity, hence the higher popularity ranks are coveted. 
 
 \vspace{10pt}
 
 To better understand the spread of the data, four groups have been constructed, `Pop25`, which contains data for all values of `spotify_track_popularity < 25`; `Pop50` for $25 \leq$ `spotify_track_popularity` $< 50$; `Pop75` for $50 \leq$ `spotify_track_popularity` $< 75$; and finally, `Pop100` for `spotify_track_popularity` $> 75$. It is evident that a large portion of the songs get ranked between $25 \leq$ `spotify_track_popularity` $< 75$, while only 1262 out of the 24169 entries are ranked equal to or above 75.
-
-
-## Results and Analysis
-```{r loading-data-sets, echo=FALSE, fig.height = 5}
-train <- read.csv("training.csv")
-train <- train %>% select(-c("X", "X.1"))
-validation <- read.csv("validation.csv")
-validation <- validation %>% select(-c("X", "X.1"))
-test <- read.csv("test.csv")
-test <- test %>% select(-c("X"))
-
-##Some useful functions for comparison
-mse <- function(actualValues, predictedValues){
-  mean((actualValues - predictedValues)^2)
-}
-```
-
-### Training models 
-
-### Steve Model 
-
-### Aishwarya Model 
-
-### Anirudh Model 
-
-### Zack Model 
-As we've seen in the EDA across the scatterplots, it is not immediately clear that a linear model fits our dataset very well. Since random forests are one of the best "out of the box" models, we will attempt to use random forests to predict the popularity of our songs. We will compare two different models, one with all fields and one with those with 0 correlation to our response removed. 
-```{r random-forests, echo=FALSE}
-#trains random forest on all fields 
-rf_all <- randomForest::randomForest(spotify_track_popularity ~ ., data = train) 
-#trains random forest on only correlated parameters 
-rf_correlated <- randomForest::randomForest(spotify_track_popularity ~ -key - tempo + ., data = train)
-rf_all.predicted <- predict(rf_all, newData = train)
-rf_correlated.predicted <- predict(rf_correlated, newData = train)
-rf_all.mse <- mse(train$spotify_track_popularity, rf_all.predicted)
-rf_correlated.mse <- mse(train$spotify_track_popularity, rf_correlated.predicted)
-
-rf_all.validation.prediction <- predict(rf_all, validation)
-rf_all.validation.mse <- mse(validation$spotify_track_popularity, rf_all.validation.prediction)
-```
-
-```{r rf-graphs, fig.show="hold", out.width="50%", echo=FALSE}
-
-rf_combined <- cbind(train, rf_all.predicted, rf_correlated.predicted)
-ggplot(data = rf_combined, aes(spotify_track_popularity, rf_all.predicted)) + geom_point() +
-  geom_abline(slope = 1, intercept = 0, col = 2) + labs(title = "Actual Vs. Predicted Values", subtitle = "All Paramaters Model") + xlab( "Actual") +  ylab ("Predicted")
-
-ggplot(data = rf_combined, aes(spotify_track_popularity, rf_correlated.predicted)) + geom_point() +
-  geom_abline(slope = 1, intercept = 0, col = 2) + labs(title = "Actual Vs. Predicted Values", subtitle = "Only Correlated Paramaters Model") + xlab( "Actual") +  ylab ("Predicted")
-
-```
-
-As we can see in the above graphics, where we plotted the expected values versus the predicted values against one another, we get a roughly linear line along the  y = x line shown in red. The models do not differ greatly between one another. We do however see that at the very high/low values our random forest predicts poorer than it does for values in the center. The mean squared error for the model with all parameters is `r rf_all.mse` and for the model removing the uncorrelated parameters is `r rf_correlated.mse`. 
-
-```{r more-rf-plots,fig.show="hold", out.width="50%", echo=FALSE }
-varImpPlot(rf_all, main = "Variable Importanct for all Paramater Model")
-
-ggplot(data = rf_combined, aes(date, spotify_track_popularity, colour = "Actual")) + geom_point() +
-  geom_point(aes(date, rf_all.predicted, colour = "Predicted")) + labs(title = "Actual Vs. Predicted Values", subtitle = "Only Correlated Paramaters Model")
-
-```
-
-We can see from the above plots that date is by far the biggest contributor to the prediction. This is followed by the peak position on the billboard chard, genre, duration, and weeks on the billboard charts. These all make a lot of sense as the large contributors, the largest surprise to me was date beating billboard peak position, as it would make sense that billboard performance would indicate the Spotify popularity. In the next plot, date, which is clearly not a linear parameter with respect to the popularity is decently well predicted by our random forest. Though as expected from the previous plots, the data is more centered rather than covering the high/low values very well.
-
-### Comparing the models 
-
-### Putting them all together 
-
-## Results and Discussion 
-
-### Results 
-
-### Discussion 
-
-### Conclusion
-
