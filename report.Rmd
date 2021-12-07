@@ -5,7 +5,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, echo = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(ggcorrplot)
@@ -109,13 +109,10 @@ popularity_boxplot = songs %>%
                       labs(x = "", y = "Spotify Track Popularity") +
                       theme(plot.title = element_text(hjust = 0.5))
 
-
-
 pop25 = songs %>% filter(spotify_track_popularity <= 25)
 pop50 = songs %>% filter(spotify_track_popularity > 25 & spotify_track_popularity <= 50)
 pop75 = songs %>% filter(spotify_track_popularity > 50 & spotify_track_popularity <= 75)
 pop100 = songs %>% filter(spotify_track_popularity > 75)
-
 
 pop25_df = cbind("Pop25", nrow(pop25)) 
 pop50_df = cbind("Pop50", nrow(pop50)) 
@@ -135,7 +132,6 @@ pop_n_plot = pop_all_df %>%
               theme(plot.title = element_text(hjust = 0.5)) +
               geom_text(aes(label = n), vjust = -0.5, size = 3,
               position = position_dodge(0.9))
-
 
 popularity_boxplot + pop_n_plot
 summary(songs$spotify_track_popularity)
@@ -226,13 +222,13 @@ plot(reg_ridge$glmnet.fit, main = 'Ridge')
 plot(reg_lasso$glmnet.fit, main = 'Lasso')
 #abline(v = sum(abs(coef(lasso.glmnet)))) 
 
-#make predictions with regression models
+# make predictions with regression models
 test_data <- read.csv("test.csv")
 test_data_clean <- dplyr::select(test_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
 x_test <- as.matrix(test_data_clean[, names(test_data_clean) != "peak_position"])
 y_test <- as.vector(test_data_clean$peak_position)
 
-#evaluate model predicitons
+# evaluate model predicitons
 ridge_pred <- predict(reg_ridge, newx = x_test, s = "lambda.min")
 lasso_pred <- predict(reg_lasso, newx = x_test, s = "lambda.min")
 ridge_mse <- mean((y_test - ridge_pred)^2)
@@ -249,9 +245,9 @@ lasso_mse
 
 ### Putting them all together 
 
-## Results and Discussion 
+### Results and Discussion 
 
-### Results 
+### Results
 
 ### Discussion 
 
