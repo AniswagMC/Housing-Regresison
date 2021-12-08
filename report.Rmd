@@ -254,7 +254,7 @@ rbind(mse_names, model_mses)
 From our choices of linear models, we can see that the reduced model of taking all the predictors that had less than 2e-16 for their p-value in the full model performed the best in terms of prediction on our validation set. However, the difference is very marginal. Our best model has an MSE of 689.5128.
 
 ### Ridge & LASSO Regression Model
-
+FOr further comparison, we also ran variations of regression - LASSO and Ridge regression to find a model that might be better suited. So, as per the EDA, we divided our dataset.
 
 ```{r echo = FALSE ,error = FALSE}
 #import library for lasso regression
@@ -270,7 +270,8 @@ x <- as.matrix(train_data_clean[, names(train_data_clean) != "spotify_track_popu
 y <- as.vector(train_data_clean$spotify_track_popularity)
 ```
 
-We run 50 runs of 5-fold CV to find the MSE of both the models and create a boxplot that compares the errors present within the the two models and the full model. 
+We ran 50 runs of 5-fold CV to tune the hyperparameters and achieve Ridge and LASSO models that would give us the best fit. The resulting boxplot compared the errors present within the the two models and the full model, to illustrate that the ridge model performed better than the other two, albeit only marginally outperforming LASSO.
+
 ```{r echo = FALSE, error = FALSE}
 #50 runs of 5-fold CV
 lambdas <- exp(seq(-5, 5, by=0.5))
@@ -309,8 +310,7 @@ boxplot(mspe_ridge, mspe_lasso, mspe_full, names = c("Ridge", "Lasso", "Full"))
 
 #plot of regressions
 plot(reg_ridge) 
-plot(reg_lasso) 
-plot(full)
+plot(reg_lasso)
 plot(reg_ridge$glmnet.fit, main = 'Ridge')
 #abline(v = sum(abs(coef(ridge.glmnet))))
 plot(reg_lasso$glmnet.fit, main = 'Lasso')
@@ -321,7 +321,11 @@ validation_data <- read.csv("validation.csv")
 vald_data_clean <- dplyr::select(validation_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
 x_vald <- as.matrix(vald_data_clean[, names(vald_data_clean) != "spotify_track_popularity"])
 y_vald <- as.vector(vald_data_clean$spotify_track_popularity)
+```
 
+We computed the predictive power of our models by comparing the models fitted to the validation set and capturing the MSE value on the new dataset.
+
+```{r}
 # evaluate model predicitons
 ridge_pred <- predict(reg_ridge, newx = x_vald, s = "lambda.min")
 lasso_pred <- predict(reg_lasso, newx = x_vald, s = "lambda.min")
@@ -337,6 +341,7 @@ ridge_pred.test <- predict(reg_ridge, newx = x_vald, s = "lambda.min")
 lasso_pred.test <- predict(reg_lasso, newx = x_vald, s = "lambda.min")
 ```
 
+At the end we saw that the ridge regression performed better than the other models, however the regular linear regression seemed to have performed even better.
 
 ### Random Forest Model 
 As we've seen in the EDA across the scatterplots, it is not immediately clear that a linear model fits our dataset very well. Since random forests are one of the best "out of the box" models, we will attempt to use random forests to predict the popularity of our songs. We will compare two different models, one with all fields and one with those with 0 correlation to our response removed.
