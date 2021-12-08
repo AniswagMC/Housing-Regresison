@@ -59,6 +59,7 @@ bd_clean <- dplyr::select(songs, -performer, -song, -spotify_genre, -spotify_tra
 
 Next we make a correlation plot to have a broad overview of what variables may be connected to our response as well as with each other:
 ```{r, echo = FALSE, fig.align = 'center', fig.height=4, out.width="50%", out.height="50%"}
+#generates correlation matrix
 options(repr.plot.width=10, repr.plot.height=10)
 cor_matrix <- round(cor(bd_clean), 1)
 corrplot(cor_matrix,
@@ -78,6 +79,7 @@ We had briefly explained in our stage 2 report that we originally chose `peak_pe
 
 Here we see the two least correlated variables with respect to `spotify_track_popularity`:
 ```{r no-corr-popularity, warning=FALSE, echo = FALSE, message=FALSE,fig.width = 12, fig.height = 4, fig.align='center'}
+#plots for some fields 
 options(repr.plot.width=10, repr.plot.height=4)
 mean_popularity <- mean(songs$spotify_track_popularity)
 p1 <- ggplot(data = songs, aes(tempo, spotify_track_popularity) ) + 
@@ -102,6 +104,7 @@ As we've seen, all these variables in the correlation matrix do have more correl
 ### Further Exploration Of Data
 
 ```{r, echo = FALSE, fig.width = 12, fig.height = 4}
+#some more eda plots
 options(repr.plot.width=10, repr.plot.height=4)
 popularity_boxplot = songs %>% 
                       ggplot(aes(x = "", y = spotify_track_popularity)) +
@@ -144,6 +147,7 @@ Spotify popularity ranges from 0 to 100. The boxplot alongside the five number s
 
 ## Results and Analysis
 ```{r loading-data-sets, echo=FALSE, fig.height = 4}
+#Loads all the datasets and removes unessecary columns
 train <- read.csv("training.csv")
 train <- train %>% dplyr::select(-c("X", "X.1"))
 validation <- read.csv("validation.csv")
@@ -164,6 +168,7 @@ mse <- function(actualValues, predictedValues){
 From the exploratory data analysis, we take out the predictor variables with no correlation to the response variable, as well as the other ones explained before in the EDA.
 
 ```{r, echo=FALSE}
+#modifies datasets for use with lm models
 train_steve <- dplyr::select(train, -performer, -song, -spotify_genre, -spotify_track_album, -date, -key, -tempo)
 validation_steve <- dplyr::select(validation, -performer, -song, -spotify_genre, -spotify_track_album, -date, -key, -tempo)
 test_steve <- dplyr::select(test, -performer, -song, -spotify_genre, -spotify_track_album, -date, -key, -tempo)
@@ -172,6 +177,7 @@ test_steve <- dplyr::select(test, -performer, -song, -spotify_genre, -spotify_tr
 Then we train a linear regression model on the training set, and show its diagnostic plots:
 
 ```{r, echo = FALSE, fig.align = "center", fig.height=4}
+#lm plots
 par(mfrow = c(1,2))
 full_model <- lm(spotify_track_popularity ~ ., data = train_steve)
 plot(full_model, 1)
@@ -224,12 +230,14 @@ From both stepwise selection methods, we can see that BIC and Cp both decrease w
 
 We first try fitting a model recommended by the selection methods (check code)
 ```{r, echo=FALSE}
+#first model
 reduced_1 <- lm(spotify_track_popularity ~ loudness + peak_position + spotify_track_explicit + valence + acousticness + danceability + weeks_on_chart + spotify_track_duration_ms, data = train_steve)
 
 ```
 
 For fun, we also fit a model based on choosing the variables with a p-value of less than 2e-16 from the full model (check code for predictors):
 ```{r, echo=FALSE}
+#second lm model
 reduced_2 <- lm(spotify_track_popularity ~ peak_position + weeks_on_chart + spotify_track_explicit + danceability + loudness + acousticness + valence, data = train_steve)
 ```
 Something noteworthy upon closer inspection is that the reduced model recommended by our stepwise selection methods is very similar to our model based on choosing the predictors with the lowest magnitude of p-values.
@@ -238,13 +246,17 @@ Finally, we compare our trained models by using it to predict those in our valid
 ```{r, echo = FALSE}
 mse <- function(preds, obs) mean((obs - preds)^2)
 
+#mse of all paramaters
 full_mse <- mse(predict(full_model, newdata = validation_steve), test$spotify_track_popularity)
 
+#mse of reduced model
 reduced1_mse <- mse(predict(reduced_1, newdata = validation_steve), test$spotify_track_popularity)
 
+#mse of other reduced model
 best_lm_validation_predictions <- predict(reduced_2, newdata = validation_steve)
 reduced2_mse <- mse(best_lm_validation_predictions, test$spotify_track_popularity)
 
+#prints mses 
 mse_names <- c("full model mse", "reduced model 1 mse", "reduced model 2 mse")
 model_mses <- c(full_mse, reduced1_mse, reduced2_mse)
 
@@ -272,7 +284,7 @@ y <- as.vector(train_data_clean$spotify_track_popularity)
 
 We ran 50 runs of 5-fold CV to tune the hyperparameters and achieve Ridge and LASSO models that would give us the best fit. The resulting boxplot compared the errors present within the the two models and the full model, to illustrate that the ridge model performed better than the other two, albeit only marginally outperforming LASSO.
 
-```{r echo = FALSE, error = FALSE}
+```{r echo = FALSE, message=FALSE, error = FALSE}
 #50 runs of 5-fold CV
 lambdas <- exp(seq(-5, 5, by=0.5))
 n <- nrow(x)
@@ -350,16 +362,20 @@ As we've seen in the EDA across the scatterplots, it is not immediately clear th
 rf_all <- randomForest::randomForest(spotify_track_popularity ~ ., data = train) 
 #trains random forest on only correlated parameters 
 rf_correlated <- randomForest::randomForest(spotify_track_popularity ~ -key - tempo + ., data = train)
+#predictions
 rf_all.predicted <- predict(rf_all, newData = train)
 rf_correlated.predicted <- predict(rf_correlated, newData = train)
+#mean sequared errors
 rf_all.mse <- mse(train$spotify_track_popularity, rf_all.predicted)
 rf_correlated.mse <- mse(train$spotify_track_popularity, rf_correlated.predicted)
 
+#predictions on validations set
 rf_all.validation.prediction <- predict(rf_all, validation)
 rf_all.validation.mse <- mse(validation$spotify_track_popularity, rf_all.validation.prediction)
 ```
 
 ```{r rf-graphs, fig.show="hold", out.width="50%", echo=FALSE}
+#some plots of the fitted random forest models
 rf_combined <- cbind(train, rf_all.predicted, rf_correlated.predicted)
 ggplot(data = rf_combined, aes(spotify_track_popularity, rf_all.predicted)) + geom_point() +
   geom_abline(slope = 1, intercept = 0, col = 2) + labs(title = "Actual Vs. Predicted Values", subtitle = "All Paramaters Model") + xlab( "Actual") +  ylab ("Predicted")
@@ -371,8 +387,10 @@ ggplot(data = rf_combined, aes(spotify_track_popularity, rf_correlated.predicted
 As we can see in the above graphics, where we plotted the expected values versus the predicted values against one another, we get a roughly linear line along the  y = x line shown in red. The models do not differ greatly between one another. We do however see that at the very high/low values our random forest predicts poorer than it does for values in the center. The mean squared error for the model with all parameters is `r rf_all.mse` and for the model removing the uncorrelated parameters is `r rf_correlated.mse`. 
 
 ```{r more-rf-plots, fig.show="hold", out.width="50%", echo=FALSE}
+#variable importance plot
 varImpPlot(rf_all, main = "Variable Importanct for all Paramater Model")
 
+#actual data plot vs date
 ggplot(data = rf_combined, aes(date, spotify_track_popularity, colour = "Actual")) + geom_point() +
   geom_point(aes(date, rf_all.predicted, colour = "Predicted")) + labs(title = "Actual Vs. Predicted Values", subtitle = "Only Correlated Paramaters Model")
 
@@ -384,6 +402,7 @@ We can see from the above plots that date is by far the biggest contributor to t
 
 The following table compares the mean squared error across the four models we've tested, with the results tested across a hold out validation set: 
 ``` {r comparing_models, echo = FALSE}
+#compares MSE of all models on validation sets 
 mses_all_models.validation <- tibble(
   `Random Forest` = rf_all.validation.mse, 
   `Linear Regression` = reduced2_mse, 
@@ -399,6 +418,7 @@ From the previous section, we see there is quite a difference between the predic
 
 Our weighted average produced weights: 
 ``` {r combining_models, echo = FALSE}
+#df of all predictions 
 prediction_all_models <- tibble(
   Actual = validation$spotify_track_popularity,
   `Random Forest` = as.numeric(rf_all.validation.prediction), 
@@ -407,16 +427,18 @@ prediction_all_models <- tibble(
   `RIDGE`= as.numeric(ridge_pred), 
 )
 n_models <- ncol(prediction_all_models)
+#used for computing mean
 predictions_matrix <- as.matrix(prediction_all_models[2:n_models])
 
-
+#mean of predictions
 prediction_all_models$MeanPred <- apply(predictions_matrix, 1, mean)
 mean_pred_mse <- mse(prediction_all_models$MeanPred, prediction_all_models$Actual)
+#weighted ensemble 
 ensemble_model <- lm(Actual ~ . - MeanPred, data = prediction_all_models )
 prediction_all_models$LmPred <- apply(prediction_all_models, 1, function(x) predict(ensemble_model, as.list(x)))
 lm_pred_mse <- mse(prediction_all_models$LmPred, prediction_all_models$Actual)
-
-kable(t(ensemble_model$coefficients))
+#coefficients of weighted ensemble
+ensemble_model$coefficients
 ````
 
 Using these different models, we see that the weighted average produces a mean squared error on our validation set of `r round(lm_pred_mse,2)`, and the simple average produces a MSE of `r round(mean_pred_mse, 2)`. 
@@ -425,6 +447,7 @@ Using these different models, we see that the weighted average produces a mean s
 
 ### Results
 ``` {r test_models, echo = FALSE}
+
 rf.test.pred <- predict(rf_all, test)
 lm.test.pred <- predict(reduced_2, test_steve)
 test_all_models <- tibble(
