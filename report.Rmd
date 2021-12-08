@@ -58,7 +58,7 @@ bd_clean <- select(songs, -performer, -song, -spotify_genre, -spotify_track_albu
 ```
 
 Next we make a correlation plot to have a broad overview of what variables may be connected to our response as well as with each other:
-```{r, echo = FALSE, fig.align = 'center'}
+```{r, echo = FALSE, fig.align = 'center', fig.height=4}
 options(repr.plot.width=10, repr.plot.height=10)
 cor_matrix <- round(cor(bd_clean), 1)
 corrplot(cor_matrix,
@@ -77,7 +77,7 @@ We had briefly explained in our stage 2 report that we originally chose `peak_pe
 `spotify_track_popularity` is correllated with almost all parameters in our data set. This means we are much more likely to be able to actually predict it's popularity based on the values of the other parameters, which will preform better than `peak_performance` did. 
 
 Here we see the two least correlated variables with respect to `spotify_track_popularity`:
-```{r no-corr-popularity, warning=FALSE, echo = FALSE, message=FALSE,fig.width = 12, fig.height = 5}
+```{r no-corr-popularity, warning=FALSE, echo = FALSE, message=FALSE,fig.width = 12, fig.height = 4}
 options(repr.plot.width=10, repr.plot.height=4)
 mean_popularity <- mean(songs$spotify_track_popularity)
 p1 <- ggplot(data = songs, aes(tempo, spotify_track_popularity) ) + 
@@ -91,9 +91,9 @@ p2 <- ggplot(data = songs, aes(key, spotify_track_popularity) ) +
   labs(x = "Key", y = "Spotify Popularity", title = "Spotify Track Popularity Compared to Key")
 p1 + p2
 ```
-These two variables have been explained in greater detail in the earlier report, but are still quite relevant to mention as in our data analysis in training and testing models, these two were filtered out due to 0 correlation with the response `spotify_track_popularity` as well as to cut down on the number of our predictors to make model selection that much easier.
+These two variables have been explained in greater detail in the earlier report, but are still quite relevant to mention as in our data analysis in training and testing models. These two were filtered out due to 0 correlation with the response `spotify_track_popularity` and cut down total number of predictors.
 
-As we've seen with all these variables in the correlation matrix we will likely need many in tandem in order to create a model to predict the popularity of the songs, but we do have correlation in some form across many variables, so `spotify_track_popularity` should be a better response variable than `peak_performance`, so we will use this as our response variable. 
+As we've seen, all these variables in the correlation matrix do have more correlation in some form in tandem with `spotify_track_popularity`, hence it should be a better response variable than `peak_performance`, so we will use this as our response variable. 
 
 \vspace{10pt}
 
@@ -139,11 +139,7 @@ summary(songs$spotify_track_popularity)
 ```
 
 
-Spotify popularity ranges from 0 to 100. The boxplot alongside the five number summary helps us understand that the median popularity is 43. This suggests that a majority of the songs are ranked lower in popularity, hence the higher popularity ranks are coveted. 
-
-\vspace{10pt}
-
-To better understand the spread of the data, four groups have been constructed, `Pop25`, which contains data for all values of `spotify_track_popularity < 25`; `Pop50` for $25 \leq$ `spotify_track_popularity` $< 50$; `Pop75` for $50 \leq$ `spotify_track_popularity` $< 75$; and finally, `Pop100` for `spotify_track_popularity` $> 75$. It is evident that a large portion of the songs get ranked between $25 \leq$ `spotify_track_popularity` $< 75$, while only 1262 out of the 24169 entries are ranked equal to or above 75.
+Spotify popularity ranges from 0 to 100. The boxplot alongside the five number summary helps us understand that the median popularity is 43. This suggests that a majority of the songs are ranked lower in popularity, hence the higher popularity ranks are coveted.
 
 
 ## Results and Analysis
