@@ -20,7 +20,7 @@ library(knitr)
 opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 
 train_raw <- read.csv("training.csv")
-train_raw <- train_raw  %>% select(-c("X"))
+train_raw <- train_raw  %>% dplyr::select(-c("X"))
 
 n <- nrow(train_raw)
 trainidx <- sample.int(n, floor(n * .75))
@@ -54,7 +54,7 @@ We as a group agreed to working with this dataset and on this question because w
 
 We first cleaned our dataset by removing obviously non-useful variables like names. (However, while we recognize that different genres may have differing levels of popularity, for simplicity we will leave out this variable as the "genre" of certain songs may be ambiguous and there are too many categories to keep track of.)
 ```{r, echo=FALSE}
-bd_clean <- select(songs, -performer, -song, -spotify_genre, -spotify_track_album, -date)
+bd_clean <- dplyr::select(songs, -performer, -song, -spotify_genre, -spotify_track_album, -date)
 ```
 
 Next we make a correlation plot to have a broad overview of what variables may be connected to our response as well as with each other:
@@ -145,11 +145,11 @@ Spotify popularity ranges from 0 to 100. The boxplot alongside the five number s
 ## Results and Analysis
 ```{r loading-data-sets, echo=FALSE, fig.height = 4}
 train <- read.csv("training.csv")
-train <- train %>% select(-c("X", "X.1"))
+train <- train %>% dplyr::select(-c("X", "X.1"))
 validation <- read.csv("validation.csv")
-validation <- validation %>% select(-c("X", "X.1"))
+validation <- validation %>% dplyr::select(-c("X", "X.1"))
 test <- read.csv("test.csv")
-test <- test %>% select(-c("X"))
+test <- test %>% dplyr::select(-c("X"))
 
 ##Some useful functions for comparison
 mse <- function(actualValues, predictedValues){
@@ -164,9 +164,9 @@ mse <- function(actualValues, predictedValues){
 From the exploratory data analysis, we take out the predictor variables with no correlation to the response variable, as well as the other ones explained before in the EDA.
 
 ```{r, echo=FALSE}
-train_steve <- select(train, -performer, -song, -spotify_genre, -spotify_track_album, -date, -key, -tempo)
-validation_steve <- select(validation, -performer, -song, -spotify_genre, -spotify_track_album, -date, -key, -tempo)
-test_steve <- select(test, -performer, -song, -spotify_genre, -spotify_track_album, -date, -key, -tempo)
+train_steve <- dplyr::select(train, -performer, -song, -spotify_genre, -spotify_track_album, -date, -key, -tempo)
+validation_steve <- dplyr::select(validation, -performer, -song, -spotify_genre, -spotify_track_album, -date, -key, -tempo)
+test_steve <- dplyr::select(test, -performer, -song, -spotify_genre, -spotify_track_album, -date, -key, -tempo)
 ```
 
 Then we train a linear regression model on the training set, and show its diagnostic plots:
