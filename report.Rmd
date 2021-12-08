@@ -101,7 +101,7 @@ As we've seen with all these variables in the correlation matrix we will likely 
 
 ### Further Exploration Of Data
 
-```{r, echo = FALSE, fig.width = 12, fig.height = 5}
+```{r, echo = FALSE, fig.width = 12, fig.height = 4}
 options(repr.plot.width=10, repr.plot.height=4)
 popularity_boxplot = songs %>% 
                       ggplot(aes(x = "", y = spotify_track_popularity)) +
@@ -147,7 +147,7 @@ To better understand the spread of the data, four groups have been constructed, 
 
 
 ## Results and Analysis
-```{r loading-data-sets, echo=FALSE, fig.height = 5}
+```{r loading-data-sets, echo=FALSE, fig.height = 4}
 train <- read.csv("training.csv")
 train <- train %>% select(-c("X", "X.1"))
 validation <- read.csv("validation.csv")
@@ -175,14 +175,13 @@ test_steve <- select(test, -performer, -song, -spotify_genre, -spotify_track_alb
 
 Then we train a linear regression model on the training set, and show its diagnostic plots:
 
-```{r, echo = FALSE, fig.align = "center"}
+```{r, echo = FALSE, fig.align = "center", fig.height=4}
 par(mfrow = c(1,2))
 full_model <- lm(spotify_track_popularity ~ ., data = train_steve)
 plot(full_model, 1)
 plot(full_model, 2)
 ```
-The interesting part of the full model is that all predictor variables end up with a very low p-value, meaning they all are quite significant in some way when it comes to the response. It may be hard to find an exact combination with better prediction power than the full model. From our Norml Q-Q plot, it would be reasonable to say the residuals resemble somewhat of a normal distribution, as many points lie near or on the linear line.
-
+The interesting part of the full model is that all predictor variables end up with a very low p-value in the summary of the full model, meaning they all are quite significant in some way when it comes to the response. This is important, as this builds the basis for predictor selection in other reduced models. From our Normal Q-Q plot, it would be reasonable to say the residuals resemble somewhat of a normal distribution, as many points lie near or on the linear line.
 
 As we want to find some optimal combination of predictor variables, we try forward and backwards selection to get some examples. The graphs shown are the BIC and Cp for forward selection and backwards selection of predictors respectively:
 ```{r, fig.show="hold", out.width="50%", echo = FALSE}
@@ -227,18 +226,17 @@ info_plot_b
 ```
 From both stepwise selection methods, we can see that BIC and Cp both decrease when having more predictors. This may mean that models with more predictors are much more favored in terms of BIC and Cp, gives us reason to look at modes with more predictor variables, and lines up with our observation of how good our predictors are (small p-value) in our full model.
 
-We first try fitting a model recommended by the selection methods:
+We first try fitting a model recommended by the selection methods (check code)
 ```{r, echo=FALSE}
 reduced_1 <- lm(spotify_track_popularity ~ loudness + peak_position + spotify_track_explicit + valence + acousticness + danceability + weeks_on_chart + spotify_track_duration_ms, data = train_steve)
 
 ```
 
-For fun, we also fit a model based on choosing the variables with a p-value of less than 2e-16:
+For fun, we also fit a model based on choosing the variables with a p-value of less than 2e-16 from the full model (check code for predictors):
 ```{r, echo=FALSE}
 reduced_2 <- lm(spotify_track_popularity ~ peak_position + weeks_on_chart + spotify_track_explicit + danceability + loudness + acousticness + valence, data = train_steve)
 ```
 Something noteworthy upon closer inspection is that the reduced model recommended by our stepwise selection methods is very similar to our model based on choosing the predictors with the lowest magnitude of p-values.
-
 
 Finally, we compare our trained models by using it to predict those in our validation set. We will use MSE as our CV score since we are focused on predictive power:
 ```{r, echo = FALSE}
@@ -258,31 +256,7 @@ rbind(mse_names, model_mses)
 
 From our choices of linear models, we can see that the reduced model of taking all the predictors that had less than 2e-16 for their p-value in the full model performed the best in terms of prediction on our validation set. However, the difference is very marginal. Our best model has an MSE of 689.5128.
 
-For fun, we also fit a model based on choosing the variables with a p-value of less than 2e-16:
-```{r, echo=FALSE}
-reduced_2 <- lm(spotify_track_popularity ~ peak_position + weeks_on_chart + spotify_track_explicit + danceability + loudness + acousticness + valence, data = train_steve)
-```
 Something noteworthy upon closer inspection is that the reduced model recommended by our stepwise selection methods is very similar to our model based on choosing the predictors with the lowest magnitude of p-values.
-
-
-Finally, we compare our trained models by using it to predict those in our validation set. We will use MSE as our CV score since we are focused on predictive power:
-```{r, echo = FALSE}
-mse <- function(preds, obs) mean((obs - preds)^2)
-
-full_mse <- mse(predict(full_model, newdata = validation_steve), test$spotify_track_popularity)
-
-reduced1_mse <- mse(predict(reduced_1, newdata = validation_steve), test$spotify_track_popularity)
-
-best_lm_validation_predictions <- predict(reduced_2, newdata = validation_steve)
-reduced2_mse <- mse(best_lm_validation_predictions, test$spotify_track_popularity)
-
-mse_names <- c("full model mse", "reduced model 1 mse", "reduced model 2 mse")
-model_mses <- c(full_mse, reduced1_mse, reduced2_mse)
-
-rbind(mse_names, model_mses)
-```
-
-From our choices of linear models, we can see that the reduced model of taking all the predictors that had less than 2e-16 for their p-value in the full model performed the best in terms of prediction on our validation set. However, the difference is very marginal. Our best model has an MSE of 689.5128.
 
 ### Ridge & LASSO Regression Model 
 ```{r echo = FALSE, eval = FALSE ,error = FALSE}
@@ -433,13 +407,13 @@ lm_pred_mse <- mse(prediction_all_models$LmPred, prediction_all_models$Actual)
 ### Results
 ``` {r test_models, echo = FALSE}
 rf.test.pred <- predict(rf_all, test)
-#lm.test.pred <- predict()
+lm.test.pred <- predict(reduced_2, test_steve)
 #lasso.test.pred <- 
 #ridge.test.pred <- 
 test_all_models <- tibble(
   Actual = test$spotify_track_popularity,
   `Random Forest` = rf.test.pred, 
-  #`Linear Regression` = 
+  `Linear Regression` = lm.test.pred
   #`LASSO` = 
   #`RIDGE`= 
 )
