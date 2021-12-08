@@ -256,7 +256,7 @@ From our choices of linear models, we can see that the reduced model of taking a
 Something noteworthy upon closer inspection is that the reduced model recommended by our stepwise selection methods is very similar to our model based on choosing the predictors with the lowest magnitude of p-values.
 
 ### Ridge & LASSO Regression Model 
-```{r echo = FALSE, eval = FALSE ,error = FALSE}
+```{r echo = FALSE ,error = FALSE}
 #import library for lasso regression
 library(glmnet)
 library(tidyverse)
@@ -314,16 +314,24 @@ plot(reg_lasso$glmnet.fit, main = 'Lasso')
 #abline(v = sum(abs(coef(lasso.glmnet)))) 
 
 # make predictions with regression models
-test_data <- read.csv("validation.csv")
-test_data_clean <- dplyr::select(test_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
-x_test <- as.matrix(test_data_clean[, names(test_data_clean) != "peak_position"])
-y_test <- as.vector(test_data_clean$peak_position)
+validation_data <- read.csv("validation.csv")
+vald_data_clean <- dplyr::select(validation_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
+x_vald <- as.matrix(vald_data_clean[, names(vald_data_clean) != "peak_position"])
+y_vald <- as.vector(vald_data_clean$peak_position)
 
 # evaluate model predicitons
-ridge_pred <- predict(reg_ridge, newx = x_test, s = "lambda.min")
-lasso_pred <- predict(reg_lasso, newx = x_test, s = "lambda.min")
-ridge_mse <- mse(y_test, ridge_pred)
-lasso_mse <- mse(y_test, lasso_pred)
+ridge_pred <- predict(reg_ridge, newx = x_vald, s = "lambda.min")
+lasso_pred <- predict(reg_lasso, newx = x_vald, s = "lambda.min")
+ridge_mse <- mse(y_vald, ridge_pred)
+lasso_mse <- mse(y_vald, lasso_pred)
+
+test_data <- read.csv("test.csv")
+test_data_clean <- dplyr::select(test_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
+x_test <- as.matrix(test_data_clean[, names(test_data_clean) != "peak_position"])
+
+# evaluate model predicitons
+ridge_pred.test <- predict(reg_ridge, newx = x_vald, s = "lambda.min")
+lasso_pred.test <- predict(reg_lasso, newx = x_vald, s = "lambda.min")
 
 ```
 
@@ -403,14 +411,12 @@ lm_pred_mse <- mse(prediction_all_models$LmPred, prediction_all_models$Actual)
 ``` {r test_models, echo = FALSE}
 rf.test.pred <- predict(rf_all, test)
 lm.test.pred <- predict(reduced_2, test_steve)
-lasso.test.pred <- predict(reg_lasso, test)
-ridge.test.pred <- predict(reg_ridge, test)
 test_all_models <- tibble(
   Actual = test$spotify_track_popularity,
   `Random Forest` = rf.test.pred, 
   `Linear Regression` = lm.test.pred,
-  `LASSO` = lasso.test.pred,
-  `RIDGE`= ridge.test.pred
+  `LASSO` = lasso_pred.test,
+  `RIDGE`= ridge_pred.test
 )
 predictions_matrix <- as.matrix(test_all_models[2:n_models])
 
@@ -423,10 +429,11 @@ test.lm_pred_mse <- mse(test_all_models$LmPred, test_all_models$Actual)
 
 ```{r summary, echo = FALSE}
 test_mses <- double(ncol(test_all_models) - 1)
+test_all_models.matrix <- as.matrix(test_all_models)
 for(i in 2:ncol(test_all_models)){
-  test_mses[i -1] <- mse(test_all_models[,i], test_all_models[,1])
+  test_mses[i -1] <- mse(test_all_models.matrix[,i], test_all_models.matrix[,1])
 }
-kable(test_mses, col.names = c("Random Forest", "Linear Regression", "LASSO", "Ridge"))#, "Mean Ensembling", "Weighted Ensembling"))
+kable(t(test_mses), col.names = c("Random Forest", "Linear Regression", "LASSO", "Ridge", "Mean Ensembling", "Weighted Ensembling"))
 ```
 
 ### Discussion 
