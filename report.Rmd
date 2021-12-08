@@ -400,26 +400,57 @@ We can see from the above plots that date is by far the biggest contributor to t
 
 ### Comparing the models 
 ``` {r comparing_models, echo = FALSE}
-mses_all_models <- tibble(
+mses_all_models.validation <- tibble(
   `Random Forest` = rf_all.validation.mse, 
   `Linear Regression` = reduced2_mse, 
   #`LASSO` = 
   #`RIDGE`= 
 )
+kable(mses_all_models, label = "MSE Of All Models on Validation Set")
 ````
 ### Putting them all together 
 ``` {r combining_models, echo = FALSE}
 prediction_all_models <- tibble(
-  `Random Forest` = rf_all.validation.prediction, 
-  `Linear Regression` = best_lm_validation_predictions, 
+  Actual = validation$spotify_track_popularity,
+  `Random Forest` = as.numeric(rf_all.validation.prediction), 
+  `Linear Regression` = as.numeric(best_lm_validation_predictions), 
   #`LASSO` = 
   #`RIDGE`= 
 )
+n_models <- ncol(prediction_all_models)
+predictions_matrix <- as.matrix(prediction_all_models[2:n_models])
+
+
+prediction_all_models$MeanPred <- apply(predictions_matrix, 1, mean)
+mean_pred_mse <- mse(prediction_all_models$MeanPred, prediction_all_models$Actual)
+ensemble_model <- lm(Actual ~ . - MeanPred, data = prediction_all_models )
+prediction_all_models$LmPred <- apply(prediction_all_models, 1, function(x) predict(ensemble_model, as.list(x)))
+lm_pred_mse <- mse(prediction_all_models$LmPred, prediction_all_models$Actual)
 ````
 
 ### Results and Discussion 
 
 ### Results
+``` {r test_models, echo = FALSE}
+rf.test.pred <- predict(rf_all, test)
+#lm.test.pred <- predict()
+#lasso.test.pred <- 
+#ridge.test.pred <- 
+test_all_models <- tibble(
+  Actual = test$spotify_track_popularity,
+  `Random Forest` = rf.test.pred, 
+  #`Linear Regression` = 
+  #`LASSO` = 
+  #`RIDGE`= 
+)
+predictions_matrix <- as.matrix(test_all_models[2:n_models])
+
+
+test_all_models$MeanPred <- apply(predictions_matrix, 1, mean)
+test.mean_pred_mse <- mse(test_all_models$MeanPred, test_all_models$Actual)
+test_all_models$LmPred <- apply(test_all_models, 1, function(x) predict(ensemble_model, as.list(x)))
+test.lm_pred_mse <- mse(test_all_models$LmPred, test_all_models$Actual)
+````
 
 ### Discussion 
 
