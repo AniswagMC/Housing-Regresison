@@ -266,7 +266,7 @@ set.seed(123)
 #import and clean data
 train_data <- read.csv("training.csv")
 train_data_clean <- dplyr::select(train_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
-x <- as.matrix(train_data_clean[, names(train_data_clean) != "peak_position"])
+x <- as.matrix(train_data_clean[, names(train_data_clean) != "spotify_track_popularity"])
 y <- as.vector(train_data_clean$peak_position)
 
 #50 runs of 5-fold CV
@@ -316,7 +316,7 @@ plot(reg_lasso$glmnet.fit, main = 'Lasso')
 # make predictions with regression models
 test_data <- read.csv("validation.csv")
 test_data_clean <- dplyr::select(test_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
-x_test <- as.matrix(test_data_clean[, names(test_data_clean) != "peak_position"])
+x_test <- as.matrix(test_data_clean[, names(test_data_clean) != "spotify_track_popularity"])
 y_test <- as.vector(test_data_clean$peak_position)
 
 # evaluate model predicitons
@@ -413,7 +413,6 @@ test_all_models <- tibble(
   `RIDGE`= ridge.test.pred
 )
 predictions_matrix <- as.matrix(test_all_models[2:n_models])
-
 
 test_all_models$MeanPred <- apply(predictions_matrix, 1, mean)
 test.mean_pred_mse <- mse(test_all_models$MeanPred, test_all_models$Actual)
