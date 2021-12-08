@@ -253,10 +253,8 @@ rbind(mse_names, model_mses)
 
 From our choices of linear models, we can see that the reduced model of taking all the predictors that had less than 2e-16 for their p-value in the full model performed the best in terms of prediction on our validation set. However, the difference is very marginal. Our best model has an MSE of 689.5128.
 
-Something noteworthy upon closer inspection is that the reduced model recommended by our stepwise selection methods is very similar to our model based on choosing the predictors with the lowest magnitude of p-values.
-
-### Ridge & LASSO Regression Model 
-```{r echo = FALSE, eval = FALSE ,error = FALSE}
+### Ridge & LASSO Regression Model
+```{r echo = FALSE ,error = FALSE}
 #import library for lasso regression
 library(glmnet)
 library(tidyverse)
@@ -267,7 +265,7 @@ set.seed(123)
 train_data <- read.csv("training.csv")
 train_data_clean <- dplyr::select(train_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
 x <- as.matrix(train_data_clean[, names(train_data_clean) != "spotify_track_popularity"])
-y <- as.vector(train_data_clean$peak_position)
+y <- as.vector(train_data_clean$spotify_track_popularity)
 
 #50 runs of 5-fold CV
 lambdas <- exp(seq(-5, 5, by=0.5))
@@ -314,22 +312,30 @@ plot(reg_lasso$glmnet.fit, main = 'Lasso')
 #abline(v = sum(abs(coef(lasso.glmnet)))) 
 
 # make predictions with regression models
-test_data <- read.csv("validation.csv")
+validation_data <- read.csv("validation.csv")
+vald_data_clean <- dplyr::select(validation_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
+x_vald <- as.matrix(vald_data_clean[, names(vald_data_clean) != "spotify_track_popularity"])
+y_vald <- as.vector(vald_data_clean$peak_position)
+
+# evaluate model predicitons
+ridge_pred <- predict(reg_ridge, newx = x_vald, s = "lambda.min")
+lasso_pred <- predict(reg_lasso, newx = x_vald, s = "lambda.min")
+ridge_mse <- mse(y_vald, ridge_pred)
+lasso_mse <- mse(y_vald, lasso_pred)
+
+test_data <- read.csv("test.csv")
 test_data_clean <- dplyr::select(test_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
 x_test <- as.matrix(test_data_clean[, names(test_data_clean) != "spotify_track_popularity"])
 y_test <- as.vector(test_data_clean$peak_position)
 
 # evaluate model predicitons
-ridge_pred <- predict(reg_ridge, newx = x_test, s = "lambda.min")
-lasso_pred <- predict(reg_lasso, newx = x_test, s = "lambda.min")
-ridge_mse <- mse(y_test, ridge_pred)
-lasso_mse <- mse(y_test, lasso_pred)
-
+ridge_pred.test <- predict(reg_ridge, newx = x_vald, s = "lambda.min")
+lasso_pred.test <- predict(reg_lasso, newx = x_vald, s = "lambda.min")
 ```
 
 
 ### Random Forest Model 
-As we've seen in the EDA across the scatterplots, it is not immediately clear that a linear model fits our dataset very well. Since random forests are one of the best "out of the box" models, we will attempt to use random forests to predict the popularity of our songs. We will compare two different models, one with all fields and one with those with 0 correlation to our response removed. 
+As we've seen in the EDA across the scatterplots, it is not immediately clear that a linear model fits our dataset very well. Since random forests are one of the best "out of the box" models, we will attempt to use random forests to predict the popularity of our songs. We will compare two different models, one with all fields and one with those with 0 correlation to our response removed.
 ```{r random-forests, echo=FALSE}
 #trains random forest on all fields 
 rf_all <- randomForest::randomForest(spotify_track_popularity ~ ., data = train) 
@@ -345,14 +351,12 @@ rf_all.validation.mse <- mse(validation$spotify_track_popularity, rf_all.validat
 ```
 
 ```{r rf-graphs, fig.show="hold", out.width="50%", echo=FALSE}
-
 rf_combined <- cbind(train, rf_all.predicted, rf_correlated.predicted)
 ggplot(data = rf_combined, aes(spotify_track_popularity, rf_all.predicted)) + geom_point() +
   geom_abline(slope = 1, intercept = 0, col = 2) + labs(title = "Actual Vs. Predicted Values", subtitle = "All Paramaters Model") + xlab( "Actual") +  ylab ("Predicted")
 
 ggplot(data = rf_combined, aes(spotify_track_popularity, rf_correlated.predicted)) + geom_point() +
   geom_abline(slope = 1, intercept = 0, col = 2) + labs(title = "Actual Vs. Predicted Values", subtitle = "Only Correlated Paramaters Model") + xlab( "Actual") +  ylab ("Predicted")
-
 ```
 
 As we can see in the above graphics, where we plotted the expected values versus the predicted values against one another, we get a roughly linear line along the  y = x line shown in red. The models do not differ greatly between one another. We do however see that at the very high/low values our random forest predicts poorer than it does for values in the center. The mean squared error for the model with all parameters is `r rf_all.mse` and for the model removing the uncorrelated parameters is `r rf_correlated.mse`. 
@@ -403,14 +407,12 @@ lm_pred_mse <- mse(prediction_all_models$LmPred, prediction_all_models$Actual)
 ``` {r test_models, echo = FALSE}
 rf.test.pred <- predict(rf_all, test)
 lm.test.pred <- predict(reduced_2, test_steve)
-lasso.test.pred <- predict(reg_lasso, test)
-ridge.test.pred <- predict(reg_ridge, test)
 test_all_models <- tibble(
   Actual = test$spotify_track_popularity,
   `Random Forest` = rf.test.pred, 
   `Linear Regression` = lm.test.pred,
-  `LASSO` = lasso.test.pred,
-  `RIDGE`= ridge.test.pred
+  `LASSO` = lasso_pred.test,
+  `RIDGE`= ridge_pred.test
 )
 predictions_matrix <- as.matrix(test_all_models[2:n_models])
 
@@ -422,16 +424,17 @@ test.lm_pred_mse <- mse(test_all_models$LmPred, test_all_models$Actual)
 
 ```{r summary, echo = FALSE}
 test_mses <- double(ncol(test_all_models) - 1)
+test_all_models.matrix <- as.matrix(test_all_models)
 for(i in 2:ncol(test_all_models)){
-  test_mses[i -1] <- mse(test_all_models[,i], test_all_models[,1])
+  test_mses[i -1] <- mse(test_all_models.matrix[,i], test_all_models.matrix[,1])
 }
-kable(test_mses, col.names = c("Random Forest", "Linear Regression", "LASSO", "Ridge"))#, "Mean Ensembling", "Weighted Ensembling"))
+kable(t(test_mses), col.names = c("Random Forest", "Linear Regression", "LASSO", "Ridge", "Mean Ensembling", "Weighted Ensembling"))
 ```
 
 ### Discussion 
 
 ### Results Discussion
-Comparing the results from all the models explored, both individual and combined, we can clearly see that we get the best predictions from our combined model with an accuracy of [INSERT VALUE]. This was expected as ensemble methods tend to perform better and are more robust in nature than individual algorithms. The second best model is the [INSERT REGRESSION] model, with accuracy [INSERT VALUE].
+Since all the models were regressive models, there isn't an accuracy parameter to compare. However, we can compare the MSE values to check for the predictive power of the models. Between the multiple models, the best model was the Random Forest with an MSE of 199.117. Surprsingly, the random forest outperformed the ensemble methods and this could largely due to the comparatively terrible LASSO and Ridge MSE values. Even after the weightage of the different models, ensembling came in second with an MSE of 263.23.
 
 ### Limitations and Further Work
-We can see that the general accuracy of results increase as the complexity of our models increased. This tells us that the true model may follow a non-linear trend. Furthermore, with transformation or scaling the values of certain variables, the predictions could have been further improved. So, it is worth exploring using other non-linear models such as polynomial regressions or neural networks. Due to a lack of time, we were unable to look into other such methods for our regression analysis.
+We can see that the general accuracy of results increase as the complexity of our models increased. This tells us that the true model may follow a non-linear trend. The predictive capabilites could . So, it is worth exploring using other non-linear models such as polynomial regressions or neural networks. 
