@@ -323,7 +323,7 @@ boxplot(mspe_ridge, mspe_lasso, mspe_full, names = c("Ridge", "Lasso", "Full"))
 #plot of regressions
 
 ```{r, fig.height = 5}
-par(mfrow(c(1,2)))
+par(mfrow=(c(1,2)))
 plot(reg_ridge$glmnet.fit, main = 'Ridge')
 #abline(v = sum(abs(coef(ridge.glmnet))))
 
