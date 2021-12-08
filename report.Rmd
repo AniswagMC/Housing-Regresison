@@ -19,16 +19,6 @@ songs <- read.csv("joined_billboard_audiofeature.csv")
 library(knitr)
 opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 
-train_raw <- read.csv("training.csv")
-train_raw <- train_raw  %>% select(-c("X"))
-
-n <- nrow(train_raw)
-trainidx <- sample.int(n, floor(n * .75))
-validationidx <- setdiff(1:n, trainidx)
-train <- train_raw[trainidx, ]
-validation <- train_raw[validationidx,]
-
-test <- read.csv("test.csv")
 ```
 
 
@@ -266,8 +256,8 @@ set.seed(123)
 #import and clean data
 train_data <- read.csv("training.csv")
 train_data_clean <- dplyr::select(train_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
-x <- as.matrix(train_data_clean[, names(train_data_clean) != "peak_position"])
-y <- as.vector(train_data_clean$peak_position)
+x <- as.matrix(train_data_clean[, names(train_data_clean) != "spotify_track_popularity"])
+y <- as.vector(train_data_clean$spotify_track_popularity)
 
 #50 runs of 5-fold CV
 lambdas <- exp(seq(-5, 5, by=0.5))
@@ -316,8 +306,8 @@ plot(reg_lasso$glmnet.fit, main = 'Lasso')
 # make predictions with regression models
 validation_data <- read.csv("validation.csv")
 vald_data_clean <- dplyr::select(validation_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
-x_vald <- as.matrix(vald_data_clean[, names(vald_data_clean) != "peak_position"])
-y_vald <- as.vector(vald_data_clean$peak_position)
+x_vald <- as.matrix(vald_data_clean[, names(vald_data_clean) != "spotify_track_popularity"])
+y_vald <- as.vector(vald_data_clean$spotify_track_popularity)
 
 # evaluate model predicitons
 ridge_pred <- predict(reg_ridge, newx = x_vald, s = "lambda.min")
@@ -327,7 +317,7 @@ lasso_mse <- mse(y_vald, lasso_pred)
 
 test_data <- read.csv("test.csv")
 test_data_clean <- dplyr::select(test_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
-x_test <- as.matrix(test_data_clean[, names(test_data_clean) != "peak_position"])
+x_test <- as.matrix(test_data_clean[, names(test_data_clean) != "spotify_track_popularity"])
 
 # evaluate model predicitons
 ridge_pred.test <- predict(reg_ridge, newx = x_vald, s = "lambda.min")
@@ -376,6 +366,8 @@ ggplot(data = rf_combined, aes(date, spotify_track_popularity, colour = "Actual"
 We can see from the above plots that date is by far the biggest contributor to the prediction. This is followed by the peak position on the billboard chard, genre, duration, and weeks on the billboard charts. These all make a lot of sense as the large contributors, the largest surprise to me was date beating billboard peak position, as it would make sense that billboard performance would indicate the Spotify popularity. In the next plot, date, which is clearly not a linear parameter with respect to the popularity is decently well predicted by our random forest. Though as expected from the previous plots, the data is more centered rather than covering the high/low values very well.
 
 ### Comparing the models 
+
+The following table compares the mean squared error across the four models we've tested, with the results tested across a hold out validation set: 
 ``` {r comparing_models, echo = FALSE}
 mses_all_models.validation <- tibble(
   `Random Forest` = rf_all.validation.mse, 
@@ -385,7 +377,12 @@ mses_all_models.validation <- tibble(
 )
 kable(mses_all_models.validation, label = "MSE Of All Models on Validation Set")
 ````
+Here we see that random forest is a significantly better predictor than the other linear models. 
+
 ### Putting them all together 
+From the previous section, we see there is quite a difference between the predictions of all models. Here we will attempt to combine these models to see if they perform better together than separately. We will try two different methods: a simple average across the 4 models, as well as using linear regression to assign weights among the models. 
+
+Our weighted average produced weights: 
 ``` {r combining_models, echo = FALSE}
 prediction_all_models <- tibble(
   Actual = validation$spotify_track_popularity,
@@ -403,7 +400,11 @@ mean_pred_mse <- mse(prediction_all_models$MeanPred, prediction_all_models$Actua
 ensemble_model <- lm(Actual ~ . - MeanPred, data = prediction_all_models )
 prediction_all_models$LmPred <- apply(prediction_all_models, 1, function(x) predict(ensemble_model, as.list(x)))
 lm_pred_mse <- mse(prediction_all_models$LmPred, prediction_all_models$Actual)
+
+ensemble_model$coefficients
 ````
+
+Using these different models, we see that the weighted average produces a mean squared error on our validation set of `r round(lm_pred_mse,2)`, and the simple average produces a MSE of `r round(mean_pred_mse, 2)`. 
 
 ### Results and Discussion 
 
@@ -426,6 +427,16 @@ test.mean_pred_mse <- mse(test_all_models$MeanPred, test_all_models$Actual)
 test_all_models$LmPred <- apply(test_all_models, 1, function(x) predict(ensemble_model, as.list(x)))
 test.lm_pred_mse <- mse(test_all_models$LmPred, test_all_models$Actual)
 ````
+
+```{r results-graphs, fig.show="hold", out.width="50%", echo=FALSE}
+
+ggplot(data = test_all_models, aes(Actual, LmPred)) + geom_point() +
+  geom_abline(slope = 1, intercept = 0, col = 2) + labs(title = "Actual Vs. Predicted Values on Test Set", subtitle = "Weighted Ensenble") + xlab( "Actual") +  ylab ("Predicted")
+
+ggplot(data = test_all_models, aes(Actual, MeanPred)) + geom_point() +
+  geom_abline(slope = 1, intercept = 0, col = 2) + labs(title = "Actual Vs. Predicted Values on Test Set", subtitle = "Simple Average Ensenble") + xlab( "Actual") +  ylab ("Predicted") 
+
+```
 
 ```{r summary, echo = FALSE}
 test_mses <- double(ncol(test_all_models) - 1)
