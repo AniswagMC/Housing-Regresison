@@ -58,7 +58,7 @@ bd_clean <- dplyr::select(songs, -performer, -song, -spotify_genre, -spotify_tra
 ```
 
 Next we make a correlation plot to have a broad overview of what variables may be connected to our response as well as with each other:
-```{r, echo = FALSE, fig.align = 'center', fig.height=4, out.width="50%", out.height="50%"}
+```{r, echo = FALSE, fig.align = 'center', fig.height=4, out.width="75%", out.height="50%"}
 #generates correlation matrix
 options(repr.plot.width=10, repr.plot.height=10)
 cor_matrix <- round(cor(bd_clean), 1)
@@ -319,15 +319,18 @@ for (i in 1:N) {
   mspe_full[i] <- mean((y - pred_full)^2)
 }
 boxplot(mspe_ridge, mspe_lasso, mspe_full, names = c("Ridge", "Lasso", "Full"))
-
+```
 #plot of regressions
-plot(reg_ridge) 
-plot(reg_lasso)
+
+```{r, fig.height = 5}
+par(mfrow(c(1,2)))
 plot(reg_ridge$glmnet.fit, main = 'Ridge')
 #abline(v = sum(abs(coef(ridge.glmnet))))
-plot(reg_lasso$glmnet.fit, main = 'Lasso')
-#abline(v = sum(abs(coef(lasso.glmnet)))) 
 
+plot(reg_lasso$glmnet.fit, main = 'Lasso')
+#abline(v = sum(abs(coef(lasso.glmnet))))
+```
+```{r}
 # make predictions with regression models
 validation_data <- read.csv("validation.csv")
 vald_data_clean <- dplyr::select(validation_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
