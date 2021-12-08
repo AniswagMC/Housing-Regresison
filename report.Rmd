@@ -314,7 +314,7 @@ plot(reg_lasso$glmnet.fit, main = 'Lasso')
 #abline(v = sum(abs(coef(lasso.glmnet)))) 
 
 # make predictions with regression models
-test_data <- read.csv("test.csv")
+test_data <- read.csv("validation.csv")
 test_data_clean <- dplyr::select(test_data, -X, -performer, -song, -spotify_genre, -spotify_track_album, -date)
 x_test <- as.matrix(test_data_clean[, names(test_data_clean) != "peak_position"])
 y_test <- as.vector(test_data_clean$peak_position)
@@ -322,11 +322,9 @@ y_test <- as.vector(test_data_clean$peak_position)
 # evaluate model predicitons
 ridge_pred <- predict(reg_ridge, newx = x_test, s = "lambda.min")
 lasso_pred <- predict(reg_lasso, newx = x_test, s = "lambda.min")
-ridge_mse <- mean((y_test - ridge_pred)^2)
-lasso_mse <- mean((y_test - lasso_pred)^2)
+ridge_mse <- mse(y_test, ridge_pred)
+lasso_mse <- mse(y_test, lasso_pred)
 
-ridge_mse
-lasso_mse
 ```
 
 
@@ -374,8 +372,8 @@ We can see from the above plots that date is by far the biggest contributor to t
 mses_all_models.validation <- tibble(
   `Random Forest` = rf_all.validation.mse, 
   `Linear Regression` = reduced2_mse, 
-  #`LASSO` = 
-  #`RIDGE`= 
+  `LASSO` = lasso_mse,
+  `RIDGE`= ridge_mse
 )
 kable(mses_all_models.validation, label = "MSE Of All Models on Validation Set")
 ````
@@ -385,8 +383,8 @@ prediction_all_models <- tibble(
   Actual = validation$spotify_track_popularity,
   `Random Forest` = as.numeric(rf_all.validation.prediction), 
   `Linear Regression` = as.numeric(best_lm_validation_predictions), 
-  #`LASSO` = 
-  #`RIDGE`= 
+  `LASSO` = as.numeric(lasso_pred), 
+  `RIDGE`= as.numeric(ridge_pred), 
 )
 n_models <- ncol(prediction_all_models)
 predictions_matrix <- as.matrix(prediction_all_models[2:n_models])
@@ -405,14 +403,14 @@ lm_pred_mse <- mse(prediction_all_models$LmPred, prediction_all_models$Actual)
 ``` {r test_models, echo = FALSE}
 rf.test.pred <- predict(rf_all, test)
 lm.test.pred <- predict(reduced_2, test_steve)
-#lasso.test.pred <- 
-#ridge.test.pred <- 
+lasso.test.pred <- predict(reg_lasso, test)
+ridge.test.pred <- predict(reg_ridge, test)
 test_all_models <- tibble(
   Actual = test$spotify_track_popularity,
   `Random Forest` = rf.test.pred, 
-  `Linear Regression` = lm.test.pred
-  #`LASSO` = 
-  #`RIDGE`= 
+  `Linear Regression` = lm.test.pred,
+  `LASSO` = lasso.test.pred,
+  `RIDGE`= ridge.test.pred
 )
 predictions_matrix <- as.matrix(test_all_models[2:n_models])
 
@@ -433,5 +431,8 @@ kable(test_mses, col.names = c("Random Forest", "Linear Regression", "LASSO", "R
 
 ### Discussion 
 
-### Conclusion
+### Results Discussion
+Comparing the results from all the models explored, both individual and combined, we can clearly see that we get the best predictions from our combined model with an accuracy of [INSERT VALUE]. This was expected as ensemble methods tend to perform better and are more robust in nature than individual algorithms. The second best model is the [INSERT REGRESSION] model, with accuracy [INSERT VALUE].
 
+### Limitations and Further Work
+We can see that the general accuracy of results increase as the complexity of our models increased. This tells us that the true model may follow a non-linear trend. Furthermore, with transformation or scaling the values of certain variables, the predictions could have been further improved. So, it is worth exploring using other non-linear models such as polynomial regressions or neural networks. Due to a lack of time, we were unable to look into other such methods for our regression analysis.
