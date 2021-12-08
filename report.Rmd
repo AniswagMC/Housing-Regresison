@@ -242,7 +242,8 @@ full_mse <- mse(predict(full_model, newdata = validation_steve), test$spotify_tr
 
 reduced1_mse <- mse(predict(reduced_1, newdata = validation_steve), test$spotify_track_popularity)
 
-reduced2_mse <- mse(predict(reduced_2, newdata = validation_steve), test$spotify_track_popularity)
+best_lm_validation_predictions <- predict(reduced_2, newdata = validation_steve)
+reduced2_mse <- mse(best_lm_validation_predictions, test$spotify_track_popularity)
 
 mse_names <- c("full model mse", "reduced model 1 mse", "reduced model 2 mse")
 model_mses <- c(full_mse, reduced1_mse, reduced2_mse)
@@ -374,7 +375,7 @@ mses_all_models.validation <- tibble(
   `LASSO` = lasso_mse,
   `RIDGE`= ridge_mse
 )
-kable(mses_all_models, label = "MSE Of All Models on Validation Set")
+kable(mses_all_models.validation, label = "MSE Of All Models on Validation Set")
 ````
 ### Putting them all together 
 ``` {r combining_models, echo = FALSE}
@@ -420,6 +421,15 @@ test_all_models$LmPred <- apply(test_all_models, 1, function(x) predict(ensemble
 test.lm_pred_mse <- mse(test_all_models$LmPred, test_all_models$Actual)
 ````
 
+```{r summary, echo = FALSE}
+test_mses <- double(ncol(test_all_models) - 1)
+for(i in 2:ncol(test_all_models)){
+  test_mses[i -1] <- mse(test_all_models[,i], test_all_models[,1])
+}
+kable(test_mses, col.names = c("Random Forest", "Linear Regression", "LASSO", "Ridge"))#, "Mean Ensembling", "Weighted Ensembling"))
+```
+
+### Discussion 
 
 ### Results Discussion
 Comparing the results from all the models explored, both individual and combined, we can clearly see that we get the best predictions from our combined model with an accuracy of [INSERT VALUE]. This was expected as ensemble methods tend to perform better and are more robust in nature than individual algorithms. The second best model is the [INSERT REGRESSION] model, with accuracy [INSERT VALUE].
