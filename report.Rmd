@@ -322,7 +322,7 @@ boxplot(mspe_ridge, mspe_lasso, mspe_full, names = c("Ridge", "Lasso", "Full"))
 ```
 #plot of regressions
 
-```{r, fig.height = 5}
+```{r, echo = FALSE, message=FALSE, error = FALSE, fig.height = 5}
 par(mfrow=(c(1,2)))
 plot(reg_ridge$glmnet.fit, main = 'Ridge')
 #abline(v = sum(abs(coef(ridge.glmnet))))
@@ -340,7 +340,7 @@ y_vald <- as.vector(vald_data_clean$spotify_track_popularity)
 
 We computed the predictive power of our models by comparing the models fitted to the validation set and capturing the MSE value on the new dataset.
 
-```{r}
+```{r echo = FALSE, message=FALSE, error = FALSE}
 # evaluate model predicitons
 ridge_pred <- predict(reg_ridge, newx = x_vald, s = "lambda.min")
 lasso_pred <- predict(reg_lasso, newx = x_vald, s = "lambda.min")
