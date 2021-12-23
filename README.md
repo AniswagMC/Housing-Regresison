@@ -103,24 +103,24 @@ exists a linear regression model that is proper to fit with.
 
 # Checkpoint 3 grade
 
-__Total__ (65 / 65)
+__Total__ (44 / 65)
 
-__Words__ (8 / 8) The text is laid out cleanly, with clear divisions and
+__Words__ (5 / 8) The text is laid out cleanly, with clear divisions and
 transitions between sections and sub-sections.  The writing itself is
-well-organized, free of grammatical and other mechanical errors, divided into
-complete sentences logically grouped into paragraphs and sections, and easy to
+well-organized, free of grammatical and other mechanical errors, ~divided into
+complete sentences logically grouped into paragraphs and sections~, and easy to
 follow from the presumed level of knowledge.
 
 __Numbers__ (1 / 1) All numerical results or summaries are reported to
 suitable precision, and with appropriate measures of uncertainty attached when
 applicable.
 
-__Pictures__ (7 / 7) Figures and tables are easy to read, with informative
+__Pictures__ (5 / 7) Figures and tables are ~easy to read~, with informative
 captions, axis labels and legends, and are placed near the relevant pieces of
 text.
 
-__Code__ (4 / 4) The code is formatted and organized so that it is easy
-for others to read and understand.  It is indented, commented, and uses
+__Code__ (1 / 4) The code is formatted and organized so that it is easy
+for others to read and understand.  It is indented, ~commented~, and uses
 meaningful names.  It only includes computations which are actually needed to
 answer the analytical questions, and avoids redundancy.  Code borrowed from the
 notes, from books, or from resources found online is explicitly acknowledged
@@ -130,25 +130,35 @@ supposed to. The text of the report is free of intrusive blocks of code.  If
 you use R Markdown, all calculations are actually done in the file as it knits,
 and only relevant results are shown. 
 
-__Exploratory Data Analysis__ (12 / 12) Variables are examined individually and
+__Exploratory Data Analysis__ (10 / 12) Variables are examined individually and
 bivariately. Features/observations are discussed with appropriate
-figure or tables. The relevance of the EDA to the questions and
-potential models is clearly explained.
+figure or tables. ~The relevance of the EDA to the questions and
+potential models is clearly explained~.
 
-__Results and analysis__ (25 / 25) The statistical summaries
-are clearly related to, or possibly derive from, the substantive questions of interest.  Any
+__Results and analysis__ (17 / 25) ~The statistical summaries
+are clearly related to, or possibly derive from, the substantive questions of interest~.  Any
 assumptions are checked by means of appropriate diagnostic plots or
 formal tests. Limitations from un-fixable problems are
 clearly noted. The actual estimation
-of parameters, predictions, or other calculations are technically correct.  All calculations
-based on estimates are clearly explained, and also technically correct.  All
+of parameters, predictions, or other calculations are technically correct.  ~All calculations
+based on estimates are clearly explained~, and also technically correct.  All
 estimates or derived quantities are accompanied with appropriate measures of
 uncertainty. 
 
-__Conclusions__ (8 / 8) The substantive questions are answered as
-precisely as the data and the model allow.  The chain of reasoning from
+__Conclusions__ (5 / 8) The substantive questions are answered as
+precisely as the data and the model allow.  ~The chain of reasoning from
 estimation results about models, or derived quantities, to substantive
-conclusions is both clear and convincing.  Contingent answers ("if $X$, then
+conclusions is both clear and convincing~.  Contingent answers ("if $X$, then
 $Y$, but if $Z$, then $W$") are likewise described as warranted by the
 and data.  If uncertainties in the data mean the answers to some
 questions must be imprecise, this too is reflected in the conclusions.
+
+Comments: 1.The label of correlation matrix is crowded and not easy to read.
+2. It's kinda weird to choose your reponse variable based on the standard that how 
+many explanatory variables are related to it. It should be chosen based on your research
+question you want to investigate.
+3. Code and raw outputs from R shouldn't be displayed in your report, and warning should be suppresed.
+4. It's expected to write more about what Ridge and Lasso are, and how you train your random forest.
+If you want to investigate your predicted values and true values, it's not assumed that there
+is a linear relationship between them. 
+5. Discuss why the performance model is deviated from what you thought before the experiments.
